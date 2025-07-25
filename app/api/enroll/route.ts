@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { enrollmentOperations, EnrollmentData } from '@/lib/database';
+import { rateLimit, getSecurityHeaders, sanitizeInput as sanitizeSecurityInput, logSecurityEvent, createAuditLog } from '@/lib/security';
 
 // Validation schema using Zod
 const enrollmentSchema = z.object({
@@ -91,19 +92,29 @@ function sanitizeInput(input: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get client IP for rate limiting
-    const ip = request.headers.get('x-forwarded-for') || 
-               request.headers.get('x-real-ip') || 
-               'unknown';
-
-    // Check rate limit
-    if (!checkRateLimit(ip)) {
+    // Apply enhanced rate limiting for enrollment submissions
+    const rateLimitResult = rateLimit(request, 2, 10 * 60 * 1000); // 2 submissions per 10 minutes
+    if (!rateLimitResult.allowed) {
+      logSecurityEvent(createAuditLog({
+        action: 'ENROLLMENT_RATE_LIMIT_EXCEEDED',
+        resource: 'enrollments',
+        details: { 
+          remaining: rateLimitResult.remaining,
+          resetTime: new Date(rateLimitResult.resetTime).toISOString()
+        },
+        success: false
+      }));
+      
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Too many enrollment submissions. Please wait before trying again.' 
+          error: 'Too many enrollment submissions. Please try again later.',
+          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
         },
-        { status: 429 }
+        { 
+          status: 429,
+          headers: getSecurityHeaders()
+        }
       );
     }
 
@@ -120,7 +131,10 @@ export async function POST(request: NextRequest) {
           error: 'Validation failed', 
           details: validationResult.error.issues 
         },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: getSecurityHeaders()
+        }
       );
     }
 
@@ -162,12 +176,22 @@ export async function POST(request: NextRequest) {
     // Check for duplicate email
     const existingEnrollments = enrollmentOperations.getByEmail(sanitizedData.parent_email);
     if (existingEnrollments.length > 0) {
+      logSecurityEvent(createAuditLog({
+        action: 'ENROLLMENT_DUPLICATE_ATTEMPT',
+        resource: 'enrollments',
+        details: { email: sanitizedData.parent_email },
+        success: false
+      }));
+      
       return NextResponse.json(
         { 
           success: false, 
           error: 'An enrollment with this email address already exists. Please contact us if you need to update your information.' 
         },
-        { status: 409 }
+        { 
+          status: 409,
+          headers: getSecurityHeaders()
+        }
       );
     }
 
@@ -183,11 +207,20 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString()
       });
 
-      return NextResponse.json({
+      // Create success response with security headers
+      const response = NextResponse.json({
         success: true,
         message: 'Enrollment application submitted successfully!',
         enrollmentId: result.lastInsertRowid
       });
+
+      // Apply security headers
+      const securityHeaders = getSecurityHeaders();
+      Object.entries(securityHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+
+      return response;
     } else {
       throw new Error('Failed to save enrollment data');
     }
@@ -195,12 +228,22 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Enrollment submission error:', error);
     
+    logSecurityEvent(createAuditLog({
+      action: 'ENROLLMENT_SUBMISSION_ERROR',
+      resource: 'enrollments',
+      details: { error: error instanceof Error ? error.message : 'Unknown error' },
+      success: false
+    }));
+    
     return NextResponse.json(
       { 
         success: false, 
         error: 'An error occurred while processing your enrollment. Please try again later.' 
       },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: getSecurityHeaders()
+      }
     );
   }
 }

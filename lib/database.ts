@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import { encryptSensitiveData, decryptSensitiveData, sanitizeInput, logSecurityEvent, createAuditLog } from './security';
 
 // Create database file
 const dbPath = path.join(process.cwd(), 'data', 'enrollment.db');
@@ -235,41 +236,160 @@ export interface EnrollmentData {
   signature_date: string;
 }
 
-// Database Operations
+// Database Operations with Enhanced Security
 export const enrollmentOperations = {
   create: (data: EnrollmentData) => {
-    const stmt = db.prepare(`
-      INSERT INTO enrollments (
-        student_first_name, student_last_name, student_date_of_birth, student_gender,
-        previous_experience, program_type, parent_first_name, parent_last_name,
-        parent_email, parent_phone, address, city, state, zip_code,
-        emergency_contact_name, emergency_contact_relationship, emergency_contact_phone,
-        emergency_contact_alt_phone, allergies, medical_conditions, medications,
-        physician_name, physician_phone, payment_method, terms_accepted,
-        photo_permission, email_updates, signature_name, signature_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    
-    return stmt.run(
-      data.student_first_name, data.student_last_name, data.student_date_of_birth,
-      data.student_gender, data.previous_experience, data.program_type,
-      data.parent_first_name, data.parent_last_name, data.parent_email,
-      data.parent_phone, data.address, data.city, data.state, data.zip_code,
-      data.emergency_contact_name, data.emergency_contact_relationship,
-      data.emergency_contact_phone, data.emergency_contact_alt_phone,
-      data.allergies, data.medical_conditions, data.medications,
-      data.physician_name, data.physician_phone, data.payment_method,
-      data.terms_accepted, data.photo_permission, data.email_updates,
-      data.signature_name, data.signature_date
-    );
+    try {
+      // Sanitize all text inputs
+      const sanitizedData = {
+        student_first_name: sanitizeInput(data.student_first_name),
+        student_last_name: sanitizeInput(data.student_last_name),
+        student_date_of_birth: data.student_date_of_birth,
+        student_gender: data.student_gender ? sanitizeInput(data.student_gender) : undefined,
+        previous_experience: data.previous_experience ? sanitizeInput(data.previous_experience) : undefined,
+        program_type: data.program_type,
+        parent_first_name: sanitizeInput(data.parent_first_name),
+        parent_last_name: sanitizeInput(data.parent_last_name),
+        parent_email: sanitizeInput(data.parent_email.toLowerCase()),
+        parent_phone: sanitizeInput(data.parent_phone),
+        address: sanitizeInput(data.address),
+        city: sanitizeInput(data.city),
+        state: data.state ? sanitizeInput(data.state) : undefined,
+        zip_code: sanitizeInput(data.zip_code),
+        emergency_contact_name: sanitizeInput(data.emergency_contact_name),
+        emergency_contact_relationship: sanitizeInput(data.emergency_contact_relationship),
+        emergency_contact_phone: sanitizeInput(data.emergency_contact_phone),
+        emergency_contact_alt_phone: data.emergency_contact_alt_phone ? sanitizeInput(data.emergency_contact_alt_phone) : undefined,
+        
+        // Encrypt sensitive medical information
+        allergies: data.allergies ? encryptSensitiveData(sanitizeInput(data.allergies)) : undefined,
+        medical_conditions: data.medical_conditions ? encryptSensitiveData(sanitizeInput(data.medical_conditions)) : undefined,
+        medications: data.medications ? encryptSensitiveData(sanitizeInput(data.medications)) : undefined,
+        physician_name: data.physician_name ? encryptSensitiveData(sanitizeInput(data.physician_name)) : undefined,
+        physician_phone: data.physician_phone ? encryptSensitiveData(sanitizeInput(data.physician_phone)) : undefined,
+        
+        payment_method: data.payment_method,
+        terms_accepted: data.terms_accepted,
+        photo_permission: data.photo_permission || false,
+        email_updates: data.email_updates || false,
+        signature_name: sanitizeInput(data.signature_name),
+        signature_date: data.signature_date
+      };
+
+      const stmt = db.prepare(`
+        INSERT INTO enrollments (
+          student_first_name, student_last_name, student_date_of_birth, student_gender,
+          previous_experience, program_type, parent_first_name, parent_last_name,
+          parent_email, parent_phone, address, city, state, zip_code,
+          emergency_contact_name, emergency_contact_relationship, emergency_contact_phone,
+          emergency_contact_alt_phone, allergies, medical_conditions, medications,
+          physician_name, physician_phone, payment_method, terms_accepted,
+          photo_permission, email_updates, signature_name, signature_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      const result = stmt.run(
+        sanitizedData.student_first_name, sanitizedData.student_last_name, sanitizedData.student_date_of_birth,
+        sanitizedData.student_gender, sanitizedData.previous_experience, sanitizedData.program_type,
+        sanitizedData.parent_first_name, sanitizedData.parent_last_name, sanitizedData.parent_email,
+        sanitizedData.parent_phone, sanitizedData.address, sanitizedData.city, sanitizedData.state, sanitizedData.zip_code,
+        sanitizedData.emergency_contact_name, sanitizedData.emergency_contact_relationship,
+        sanitizedData.emergency_contact_phone, sanitizedData.emergency_contact_alt_phone,
+        sanitizedData.allergies, sanitizedData.medical_conditions, sanitizedData.medications,
+        sanitizedData.physician_name, sanitizedData.physician_phone, sanitizedData.payment_method,
+        sanitizedData.terms_accepted, sanitizedData.photo_permission, sanitizedData.email_updates,
+        sanitizedData.signature_name, sanitizedData.signature_date
+      );
+
+      // Log enrollment creation for audit trail
+      logSecurityEvent(createAuditLog({
+        action: 'ENROLLMENT_CREATED',
+        resource: 'enrollments',
+        details: { 
+          enrollmentId: result.lastInsertRowid, 
+          studentName: `${sanitizedData.student_first_name} ${sanitizedData.student_last_name}`,
+          parentEmail: sanitizedData.parent_email,
+          program: sanitizedData.program_type
+        },
+        success: true
+      }));
+
+      return result;
+    } catch (error) {
+      console.error('Error creating enrollment:', error);
+      logSecurityEvent(createAuditLog({
+        action: 'ENROLLMENT_CREATION_ERROR',
+        resource: 'enrollments',
+        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        success: false
+      }));
+      throw error;
+    }
   },
 
   getAll: () => {
-    return db.prepare('SELECT * FROM enrollments ORDER BY submission_date DESC').all();
+    try {
+      const enrollments = db.prepare('SELECT * FROM enrollments ORDER BY submission_date DESC').all() as any[];
+      
+      // Decrypt sensitive medical data for display
+      return enrollments.map(enrollment => ({
+        ...enrollment,
+        allergies: enrollment.allergies ? decryptSensitiveData(enrollment.allergies) : enrollment.allergies,
+        medical_conditions: enrollment.medical_conditions ? decryptSensitiveData(enrollment.medical_conditions) : enrollment.medical_conditions,
+        medications: enrollment.medications ? decryptSensitiveData(enrollment.medications) : enrollment.medications,
+        physician_name: enrollment.physician_name ? decryptSensitiveData(enrollment.physician_name) : enrollment.physician_name,
+        physician_phone: enrollment.physician_phone ? decryptSensitiveData(enrollment.physician_phone) : enrollment.physician_phone
+      }));
+    } catch (error) {
+      console.error('Error retrieving enrollments:', error);
+      logSecurityEvent(createAuditLog({
+        action: 'ENROLLMENT_RETRIEVAL_ERROR',
+        resource: 'enrollments',
+        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        success: false
+      }));
+      throw error;
+    }
   },
 
   getById: (id: number) => {
-    return db.prepare('SELECT * FROM enrollments WHERE id = ?').get(id);
+    try {
+      const enrollment = db.prepare('SELECT * FROM enrollments WHERE id = ?').get(id) as any;
+      
+      if (!enrollment) return null;
+      
+      // Decrypt sensitive medical data for display
+      const decryptedEnrollment = {
+        ...enrollment,
+        allergies: enrollment.allergies ? decryptSensitiveData(enrollment.allergies) : enrollment.allergies,
+        medical_conditions: enrollment.medical_conditions ? decryptSensitiveData(enrollment.medical_conditions) : enrollment.medical_conditions,
+        medications: enrollment.medications ? decryptSensitiveData(enrollment.medications) : enrollment.medications,
+        physician_name: enrollment.physician_name ? decryptSensitiveData(enrollment.physician_name) : enrollment.physician_name,
+        physician_phone: enrollment.physician_phone ? decryptSensitiveData(enrollment.physician_phone) : enrollment.physician_phone
+      };
+
+      // Log data access for audit trail
+      logSecurityEvent(createAuditLog({
+        action: 'ENROLLMENT_ACCESSED',
+        resource: 'enrollments',
+        details: { 
+          enrollmentId: id,
+          studentName: `${enrollment.student_first_name} ${enrollment.student_last_name}`
+        },
+        success: true
+      }));
+
+      return decryptedEnrollment;
+    } catch (error) {
+      console.error('Error retrieving enrollment by ID:', error);
+      logSecurityEvent(createAuditLog({
+        action: 'ENROLLMENT_ACCESS_ERROR',
+        resource: 'enrollments',
+        details: { enrollmentId: id, error: error instanceof Error ? error.message : 'Unknown error' },
+        success: false
+      }));
+      throw error;
+    }
   },
 
   getByEmail: (email: string) => {

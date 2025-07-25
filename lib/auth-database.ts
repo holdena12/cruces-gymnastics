@@ -1,12 +1,17 @@
 import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { join } from 'path';
+import { validatePasswordStrength, logSecurityEvent, createAuditLog } from './security';
 
 const dbPath = join(process.cwd(), 'auth.db');
 const authDb = new Database(dbPath);
 
+// Enhanced JWT configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+const JWT_EXPIRES_IN = '24h'; // Reduced from 7 days for better security
+const BCRYPT_ROUNDS = 12; // High security hashing
 
 // Create the users table if it doesn't exist
 const createUsersTable = `
@@ -159,14 +164,32 @@ export const authOperations = {
   // Create new user
   createUser: async (data: CreateUserData): Promise<{ success: boolean; user?: User; error?: string }> => {
     try {
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(data.password);
+      if (!passwordValidation.valid) {
+        logSecurityEvent(createAuditLog({
+          action: 'USER_CREATION_FAILED',
+          resource: 'users',
+          details: { email: data.email, reason: 'weak_password' },
+          success: false
+        }));
+        return { success: false, error: `Password too weak: ${passwordValidation.errors.join(', ')}` };
+      }
+
       // Check if user already exists
       const existingUser = authDb.prepare('SELECT id FROM users WHERE email = ?').get(data.email);
       if (existingUser) {
+        logSecurityEvent(createAuditLog({
+          action: 'USER_CREATION_FAILED',
+          resource: 'users',
+          details: { email: data.email, reason: 'email_exists' },
+          success: false
+        }));
         return { success: false, error: 'User with this email already exists' };
       }
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(data.password, 12);
+      // Hash password with enhanced security
+      const hashedPassword = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
 
       // Insert user
       const stmt = authDb.prepare(`
@@ -188,9 +211,25 @@ export const authOperations = {
         FROM users WHERE id = ?
       `).get(result.lastInsertRowid) as User;
 
+      // Log successful user creation
+      logSecurityEvent(createAuditLog({
+        userId: user.id,
+        userEmail: user.email,
+        action: 'USER_CREATED',
+        resource: 'users',
+        details: { role: user.role },
+        success: true
+      }));
+
       return { success: true, user };
     } catch (error) {
       console.error('Error creating user:', error);
+      logSecurityEvent(createAuditLog({
+        action: 'USER_CREATION_ERROR',
+        resource: 'users',
+        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        success: false
+      }));
       return { success: false, error: 'Failed to create user' };
     }
   },
@@ -205,32 +244,48 @@ export const authOperations = {
       `).get(credentials.email.toLowerCase().trim()) as any;
 
       if (!user) {
+        logSecurityEvent(createAuditLog({
+          action: 'LOGIN_FAILED',
+          resource: 'authentication',
+          details: { email: credentials.email, reason: 'user_not_found' },
+          success: false
+        }));
         return { success: false, error: 'Invalid email or password' };
       }
 
       // Verify password
       const isValidPassword = await bcrypt.compare(credentials.password, user.password_hash);
       if (!isValidPassword) {
+        logSecurityEvent(createAuditLog({
+          userId: user.id,
+          userEmail: user.email,
+          action: 'LOGIN_FAILED',
+          resource: 'authentication',
+          details: { reason: 'invalid_password' },
+          success: false
+        }));
         return { success: false, error: 'Invalid email or password' };
       }
 
       // Update last login
       authDb.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
 
-      // Create JWT token
+      // Create JWT token with enhanced security
       const token = jwt.sign(
         { 
           userId: user.id, 
           email: user.email, 
-          role: user.role 
+          role: user.role,
+          iat: Math.floor(Date.now() / 1000),
+          jti: crypto.randomBytes(16).toString('hex') // Unique token ID
         },
         JWT_SECRET,
-        { expiresIn: '7d' }
+        { expiresIn: JWT_EXPIRES_IN }
       );
 
-      // Store session
+      // Store session with expiration
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+      expiresAt.setDate(expiresAt.getDate() + 1); // 24 hours for security
 
       authDb.prepare(`
         INSERT INTO sessions (user_id, token, expires_at)
@@ -247,9 +302,25 @@ export const authOperations = {
         created_at: user.created_at
       };
 
+      // Log successful login
+      logSecurityEvent(createAuditLog({
+        userId: user.id,
+        userEmail: user.email,
+        action: 'LOGIN_SUCCESS',
+        resource: 'authentication',
+        details: { role: user.role },
+        success: true
+      }));
+
       return { success: true, user: userResponse, token };
     } catch (error) {
       console.error('Error during login:', error);
+      logSecurityEvent(createAuditLog({
+        action: 'LOGIN_ERROR',
+        resource: 'authentication',
+        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        success: false
+      }));
       return { success: false, error: 'Login failed' };
     }
   },
