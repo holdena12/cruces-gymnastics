@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database files (contain sensitive user data)
+*.db
+auth.db
+enrollment.db
