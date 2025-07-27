@@ -21,7 +21,7 @@ const createUsersTable = `
     password_hash TEXT NOT NULL,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
-    role TEXT DEFAULT 'user' CHECK(role IN ('user', 'admin')),
+    role TEXT DEFAULT 'user' CHECK(role IN ('user', 'admin', 'coach')),
     is_active BOOLEAN DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -140,7 +140,7 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'coach';
   is_active: boolean;
   created_at: string;
   last_login?: string;
@@ -151,7 +151,7 @@ export interface CreateUserData {
   password: string;
   first_name: string;
   last_name: string;
-  role?: 'user' | 'admin';
+  role?: 'user' | 'admin' | 'coach';
 }
 
 export interface LoginCredentials {
@@ -163,8 +163,18 @@ export interface LoginCredentials {
 export const authOperations = {
   // Create new user
   createUser: async (data: CreateUserData): Promise<{ success: boolean; user?: User; error?: string }> => {
+    console.log('--- Inside createUser ---');
+    console.log('Received data:', {
+      email: data.email,
+      firstName: data.first_name,
+      lastName: data.last_name,
+      role: data.role,
+      password: data.password ? `****** (length: ${data.password.length})` : 'Not provided'
+    });
     try {
-      // Validate password strength
+      // Password strength validation removed as per user request.
+      // NOTE: This is not recommended for production environments.
+      /*
       const passwordValidation = validatePasswordStrength(data.password);
       if (!passwordValidation.valid) {
         logSecurityEvent(createAuditLog({
@@ -175,6 +185,7 @@ export const authOperations = {
         }));
         return { success: false, error: `Password too weak: ${passwordValidation.errors.join(', ')}` };
       }
+      */
 
       // Check if user already exists
       const existingUser = authDb.prepare('SELECT id FROM users WHERE email = ?').get(data.email);
@@ -385,7 +396,7 @@ export const authOperations = {
   },
 
   // Update user role (admin only)
-  updateUserRole: (userId: number, role: 'user' | 'admin'): boolean => {
+  updateUserRole: (userId: number, role: 'user' | 'admin' | 'coach'): boolean => {
     try {
       const result = authDb.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId);
       return result.changes > 0;

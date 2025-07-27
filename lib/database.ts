@@ -297,7 +297,7 @@ export const enrollmentOperations = {
         sanitizedData.emergency_contact_phone, sanitizedData.emergency_contact_alt_phone,
         sanitizedData.allergies, sanitizedData.medical_conditions, sanitizedData.medications,
         sanitizedData.physician_name, sanitizedData.physician_phone, sanitizedData.payment_method,
-        sanitizedData.terms_accepted, sanitizedData.photo_permission, sanitizedData.email_updates,
+        sanitizedData.terms_accepted ? 1 : 0, sanitizedData.photo_permission ? 1 : 0, sanitizedData.email_updates ? 1 : 0,
         sanitizedData.signature_name, sanitizedData.signature_date
       );
 

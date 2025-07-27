@@ -92,7 +92,6 @@ export default function EnrollPage() {
             <div className="hidden md:flex space-x-8">
               <Link href="/#home" className="text-gray-300 hover:text-red-500 transition-colors">Home</Link>
               <Link href="/#programs" className="text-gray-300 hover:text-red-500 transition-colors">Programs</Link>
-              <Link href="/#schedule" className="text-gray-300 hover:text-red-500 transition-colors">Schedule</Link>
               <Link href="/#coaches" className="text-gray-300 hover:text-red-500 transition-colors">Coaches</Link>
               <Link href="/#contact" className="text-gray-300 hover:text-red-500 transition-colors">Contact</Link>
             </div>
@@ -109,7 +108,7 @@ export default function EnrollPage() {
           {/* Page Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Enrollment Application</h1>
-            <p className="text-lg text-gray-600">Join the Cruces Gymnastics Center family! Please complete the form below to begin your gymnastics journey.</p>
+            <p className="text-lg text-gray-600">Complete the form below to apply for our gymnastics programs.</p>
           </div>
 
           {/* Status Message */}
@@ -121,7 +120,7 @@ export default function EnrollPage() {
             }`}>
               <p className="font-medium">{submitStatus.message}</p>
               {submitStatus.success && (
-                <p className="text-sm mt-2">Your enrollment application has been received. We will contact you within 24 hours to complete the enrollment process and schedule your first class.</p>
+                <p className="text-sm mt-2">Your enrollment application has been received. We will contact you within 24 hours to complete the enrollment process and confirm your first class.</p>
               )}
             </div>
           )}
@@ -191,10 +190,10 @@ export default function EnrollPage() {
                         </div>
                       </label>
                       <label className="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input type="radio" name="program" value="adult" required className="text-red-600 focus:ring-red-600" />
+                        <input type="radio" name="program" value="ninja" required className="text-red-600 focus:ring-red-600" />
                         <div>
-                          <span className="font-medium">Adult Classes</span>
-                          <p className="text-sm text-gray-600">18+ | $70/month</p>
+                          <span className="font-medium">Ninja Classes</span>
+                          <p className="text-sm text-gray-600">Ages 4-16 | $85/month</p>
                         </div>
                       </label>
                     </div>
@@ -333,7 +332,7 @@ export default function EnrollPage() {
                     <h3 className="font-medium text-gray-900 mb-3">Please review and acknowledge:</h3>
                     <div className="space-y-3 text-sm text-gray-700">
                       <p>• I understand the cancellation policy [DETAILS TO BE FILLED]</p>
-                      <p>• I agree to the payment terms and schedule [DETAILS TO BE FILLED]</p>
+                      <p>• I agree to the payment terms and policies [DETAILS TO BE FILLED]</p>
                       <p>• I understand the make-up class policy [DETAILS TO BE FILLED]</p>
                       <p>• I acknowledge the risk and liability policy [DETAILS TO BE FILLED]</p>
                       <p>• I agree to the dress code and behavior expectations [DETAILS TO BE FILLED]</p>
@@ -397,14 +396,14 @@ export default function EnrollPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4 text-red-500">Cruces Gymnastics Center</h2>
-            <p className="text-gray-400 mb-6">Building champions, one flip at a time.</p>
+            <p className="text-gray-400 mb-6">Quality gymnastics training in Las Cruces.</p>
             <div className="flex justify-center space-x-6">
               <a href="https://facebook.com/crucesgymnastics" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-red-500 transition-colors">Facebook</a>
               <a href="https://instagram.com/crucesgymnastics" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-red-500 transition-colors">Instagram</a>
               <a href="https://youtube.com/@crucesgymnastics" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-red-500 transition-colors">YouTube</a>
             </div>
             <div className="mt-8 pt-8 border-t border-gray-800 text-gray-400">
-              <p>&copy; 2024 Cruces Gymnastics Center. All rights reserved.</p>
+              <p>&copy; 2025 Cruces Gymnastics Center. All rights reserved.</p>
             </div>
           </div>
         </div>

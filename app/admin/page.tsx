@@ -8,10 +8,26 @@ interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'coach';
   is_active: boolean;
   created_at: string;
   last_login?: string;
+}
+
+interface Staff {
+    id: number;
+    user_id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    role: string;
+    specializations: string;
+    certifications: string;
+    hire_date: string;
+    hourly_rate: number;
+    bio: string;
+    photo_url: string;
 }
 
 interface Enrollment {
@@ -47,16 +63,17 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'enrollments' | 'users'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'enrollments' | 'users' | 'staff'>('overview');
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
   const [editingUser, setEditingUser] = useState<number | null>(null);
   const [updateLoading, setUpdateLoading] = useState<number | null>(null);
   const [updateMessage, setUpdateMessage] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState<{
     show: boolean;
     userId: number | null;
-    newRole: 'user' | 'admin' | null;
+    newRole: 'user' | 'admin' | 'coach' | null;
     password: string;
   }>({
     show: false,
@@ -66,6 +83,20 @@ export default function AdminDashboard() {
   });
   const [processingApplication, setProcessingApplication] = useState<number | null>(null);
   const [viewingApplication, setViewingApplication] = useState<Enrollment | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [newCoach, setNewCoach] = useState({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    phone: '',
+    role: 'coach',
+    bio: '',
+    specializations: [],
+    certifications: [],
+    hireDate: '',
+    hourlyRate: 0,
+  });
 
   useEffect(() => {
     checkAuth();
@@ -104,6 +135,14 @@ export default function AdminDashboard() {
         const usersData = await usersResponse.json();
         setUsers(usersData.users || []);
       }
+
+      // Load staff
+      const staffResponse = await fetch('/api/admin/staff');
+        if (staffResponse.ok) {
+            const staffData = await staffResponse.json();
+            setStaff(staffData.staff || []);
+        }
+
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -118,7 +157,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleRoleUpdate = async (userId: number, newRole: 'user' | 'admin') => {
+  const handleRoleUpdate = async (userId: number, newRole: 'user' | 'admin' | 'coach') => {
     // If promoting to admin, require password confirmation
     if (newRole === 'admin') {
       setPasswordConfirmation({
@@ -138,7 +177,7 @@ export default function AdminDashboard() {
     await performRoleUpdate(userId, newRole);
   };
 
-  const performRoleUpdate = async (userId: number, newRole: 'user' | 'admin', adminPassword?: string) => {
+  const performRoleUpdate = async (userId: number, newRole: 'user' | 'admin' | 'coach', adminPassword?: string) => {
     setUpdateLoading(userId);
     setUpdateMessage('');
 
@@ -182,6 +221,45 @@ export default function AdminDashboard() {
       setUpdateLoading(null);
     }
   };
+
+  const handleAddCoach = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdateMessage('');
+
+    try {
+      const response = await fetch('/api/admin/coaches', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newCoach),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setUpdateMessage('Coach added successfully!');
+        setNewCoach({
+            email: '',
+            password: '',
+            firstName: '',
+            lastName: '',
+            phone: '',
+            role: 'coach',
+            bio: '',
+            specializations: [],
+            certifications: [],
+            hireDate: '',
+            hourlyRate: 0,
+        });
+        loadData();
+      } else {
+        setUpdateMessage(result.error || 'Failed to add coach');
+      }
+    } catch (error) {
+        setUpdateMessage('An error occurred while adding the coach');
+    }
+    };
 
   const handlePasswordConfirmSubmit = async () => {
     if (!passwordConfirmation.password.trim()) {
@@ -294,6 +372,27 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteEnrollment = async (enrollmentId: number) => {
+    try {
+      const response = await fetch('/api/admin/enrollments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: enrollmentId }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setEnrollments(enrollments.filter(e => e.id !== enrollmentId));
+        setShowDeleteConfirm(null);
+      } else {
+        alert(`Error: ${result.error}`);
+        setShowDeleteConfirm(null);
+      }
+    } catch (error) {
+      alert('An unexpected error occurred.');
+      setShowDeleteConfirm(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -305,21 +404,73 @@ export default function AdminDashboard() {
     );
   }
 
+  if (showDeleteConfirm !== null) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">
+            Confirm Deletion
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Are you sure you want to delete this enrollment? This action cannot be undone.
+          </p>
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={() => setShowDeleteConfirm(null)}
+              className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleDeleteEnrollment(showDeleteConfirm)}
+              className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Confirm Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen" style={{background: 'var(--gray-50)'}}>
       {/* Header */}
-      <header className="bg-gray-900 shadow-md">
+      <header className="glass sticky top-0 z-50" style={{background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)'}}>
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-red-600">Cruces Gymnastics Center</Link>
-              <span className="ml-4 px-3 py-1 bg-red-600 text-white text-sm rounded-full">Admin</span>
+              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+                Cruces Gymnastics Center
+              </Link>
+              <span 
+                className="ml-6 px-4 py-2 text-sm font-semibold rounded-xl text-white"
+                style={{
+                  background: 'var(--secondary-600)',
+                  boxShadow: 'var(--shadow-md)'
+                }}
+              >
+                Admin
+              </span>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-white">Welcome, {user?.first_name}</span>
+              <span className="text-gray-300 font-medium">Welcome, {user?.first_name}</span>
               <button
                 onClick={handleLogout}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                className="px-6 py-2.5 rounded-xl font-semibold transition-all duration-300"
+                style={{
+                  background: 'var(--gradient-primary)',
+                  color: 'white',
+                  boxShadow: 'var(--shadow-md)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                }}
               >
                 Logout
               </button>
@@ -328,29 +479,33 @@ export default function AdminDashboard() {
         </nav>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Page Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage enrollments, users, and center operations</p>
+        <div className="mb-12 animate-fade-in-up">
+          <h1 className="text-5xl font-bold mb-4" style={{color: 'var(--gray-900)'}}>Admin Dashboard</h1>
+          <p className="text-xl" style={{color: 'var(--gray-600)'}}>Manage enrollments, users, and center operations</p>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="mb-8">
+        <div className="mb-12">
           <nav className="flex space-x-8">
             {[
               { key: 'overview', label: 'Overview' },
               { key: 'enrollments', label: 'Enrollments' },
               { key: 'users', label: 'Users' },
+              { key: 'staff', label: 'Staff' },
             ].map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as any)}
-                className={`pb-2 border-b-2 font-medium ${
+                className={`pb-3 border-b-2 font-semibold text-lg transition-all duration-300 ${
                   activeTab === tab.key
-                    ? 'border-red-600 text-red-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'text-red-600'
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
+                style={{
+                  borderColor: activeTab === tab.key ? 'var(--primary-600)' : 'transparent'
+                }}
               >
                 {tab.label}
               </button>
@@ -360,39 +515,46 @@ export default function AdminDashboard() {
 
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Enrollments</h3>
-              <p className="text-3xl font-bold text-red-600">{enrollments.length}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            <div className="card-modern p-8">
+              <h3 className="text-2xl font-semibold mb-3" style={{color: 'var(--gray-900)'}}>Total Enrollments</h3>
+              <p className="text-5xl font-bold" style={{color: 'var(--primary-600)'}}>{enrollments.length}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Active Users</h3>
-              <p className="text-3xl font-bold text-red-600">{users.filter(u => u.is_active).length}</p>
+            <div className="card-modern p-8">
+              <h3 className="text-2xl font-semibold mb-3" style={{color: 'var(--gray-900)'}}>Active Users</h3>
+              <p className="text-5xl font-bold" style={{color: 'var(--secondary-600)'}}>{users.filter(u => u.is_active).length}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Pending Applications</h3>
-              <p className="text-3xl font-bold text-red-600">{enrollments.filter(e => e.status === 'pending').length}</p>
+            <div className="card-modern p-8">
+              <h3 className="text-2xl font-semibold mb-3" style={{color: 'var(--gray-900)'}}>Pending Applications</h3>
+              <p className="text-5xl font-bold" style={{color: 'var(--accent-600)'}}>{enrollments.filter(e => e.status === 'pending').length}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Admin Users</h3>
-              <p className="text-3xl font-bold text-red-600">{users.filter(u => u.role === 'admin').length}</p>
+            <div className="card-modern p-8">
+              <h3 className="text-2xl font-semibold mb-3" style={{color: 'var(--gray-900)'}}>Admin Users</h3>
+              <p className="text-5xl font-bold" style={{color: 'var(--gray-700)'}}>{users.filter(u => u.role === 'admin').length}</p>
             </div>
           </div>
         )}
 
         {/* Enrollments Tab */}
         {activeTab === 'enrollments' && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Enrollment Applications</h2>
+          <div className="card-modern overflow-hidden">
+            <div className="px-8 py-6 border-b" style={{borderColor: 'var(--gray-200)'}}>
+              <h2 className="text-3xl font-semibold" style={{color: 'var(--gray-900)'}}>Enrollment Applications</h2>
               
               {/* Update Message */}
               {updateMessage && (
-                <div className={`mt-4 p-3 rounded-lg ${
-                  updateMessage.includes('successfully') 
-                    ? 'bg-green-100 text-green-800 border border-green-200' 
-                    : 'bg-red-100 text-red-800 border border-red-200'
-                }`}>
+                <div 
+                  className={`mt-6 p-4 rounded-xl ${
+                    updateMessage.includes('successfully') 
+                      ? 'border' 
+                      : 'border'
+                  }`}
+                  style={{
+                    background: updateMessage.includes('successfully') ? 'var(--accent-50)' : 'var(--primary-50)',
+                    color: updateMessage.includes('successfully') ? 'var(--accent-800)' : 'var(--primary-800)',
+                    borderColor: updateMessage.includes('successfully') ? 'var(--accent-200)' : 'var(--primary-200)'
+                  }}
+                >
                   {updateMessage}
                 </div>
               )}
@@ -458,9 +620,15 @@ export default function AdminDashboard() {
                               <button
                                 onClick={() => handleApplicationAction(enrollment.id, 'reject')}
                                 disabled={processingApplication === enrollment.id}
-                                className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="bg-orange-500 text-white px-3 py-1 rounded-md hover:bg-orange-600 transition-colors text-sm"
                               >
-                                {processingApplication === enrollment.id ? 'Processing...' : 'Reject'}
+                                Reject
+                              </button>
+                              <button
+                                onClick={() => setShowDeleteConfirm(enrollment.id)}
+                                className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition-colors text-sm ml-2"
+                              >
+                                Delete
                               </button>
                             </>
                           )}
@@ -543,13 +711,13 @@ export default function AdminDashboard() {
                           <button
                             onClick={() => handleRoleUpdate(
                               userData.id, 
-                              userData.role === 'admin' ? 'user' : 'admin'
+                              userData.role === 'admin' ? 'user' : (userData.role === 'user' ? 'coach' : 'admin')
                             )}
                             disabled={updateLoading === userData.id}
                             className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {updateLoading === userData.id ? 'Updating...' : (
-                              userData.role === 'admin' ? 'Demote to User' : 'Promote to Admin'
+                                userData.role === 'admin' ? 'Demote to User' : (userData.role === 'user' ? 'Promote to Coach' : 'Promote to Admin')
                             )}
                           </button>
                           
@@ -571,6 +739,76 @@ export default function AdminDashboard() {
               </table>
             </div>
           </div>
+        )}
+
+        {activeTab === 'staff' && (
+            <div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2">
+                        <div className="bg-white rounded-lg shadow overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h2 className="text-xl font-semibold text-gray-900">Staff Management</h2>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hire Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {staff.map((staffMember) => (
+                                            <tr key={staffMember.id}>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-medium text-gray-900">
+                                                        {staffMember.first_name} {staffMember.last_name}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {staffMember.email}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                        {staffMember.role}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {new Date(staffMember.hire_date).toLocaleDateString()}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <h3 className="text-xl font-semibold text-gray-900 mb-4">Add New Coach</h3>
+                            <form onSubmit={handleAddCoach}>
+                                <div className="space-y-4">
+                                    <input type="text" placeholder="First Name" value={newCoach.firstName} onChange={(e) => setNewCoach({ ...newCoach, firstName: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
+                                    <input type="text" placeholder="Last Name" value={newCoach.lastName} onChange={(e) => setNewCoach({ ...newCoach, lastName: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
+                                    <input type="email" placeholder="Email" value={newCoach.email} onChange={(e) => setNewCoach({ ...newCoach, email: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
+                                    <input type="password" placeholder="Password" value={newCoach.password} onChange={(e) => setNewCoach({ ...newCoach, password: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
+                                    <input type="text" placeholder="Phone" value={newCoach.phone} onChange={(e) => setNewCoach({ ...newCoach, phone: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+                                    <input type="date" placeholder="Hire Date" value={newCoach.hireDate} onChange={(e) => setNewCoach({ ...newCoach, hireDate: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+                                    <div className="flex items-center space-x-2">
+                                        <label htmlFor="hourlyRate" className="text-sm font-medium text-gray-700">Hourly Rate:</label>
+                                        <input type="number" id="hourlyRate" placeholder="Hourly Rate" value={newCoach.hourlyRate} onChange={(e) => setNewCoach({ ...newCoach, hourlyRate: Number(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+                                    </div>
+                                    <textarea placeholder="Bio" value={newCoach.bio} onChange={(e) => setNewCoach({ ...newCoach, bio: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+                                    <button type="submit" className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700">Add Coach</button>
+                                </div>
+                            </form>
+                            {updateMessage && <p className="mt-4 text-sm text-gray-600">{updateMessage}</p>}
+                        </div>
+                    </div>
+                </div>
+            </div>
         )}
       </div>
 

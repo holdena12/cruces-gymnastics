@@ -134,7 +134,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-xl font-bold mb-2 text-red-500">Cruces Gymnastics Center</h2>
             <p className="text-gray-400 text-sm">Building champions, one flip at a time.</p>
             <div className="mt-4 text-gray-400 text-xs">
-              <p>&copy; 2024 Cruces Gymnastics Center. All rights reserved.</p>
+              <p>&copy; 2025 Cruces Gymnastics Center. All rights reserved.</p>
             </div>
           </div>
         </div>

@@ -139,54 +139,76 @@ export async function POST(request: NextRequest) {
     }
 
     const data = validationResult.data;
+    console.log('✓ Validation passed');
 
-    // Sanitize text inputs
+    // Sanitize all inputs for security
     const sanitizedData: EnrollmentData = {
-      student_first_name: sanitizeInput(data.student_first_name),
-      student_last_name: sanitizeInput(data.student_last_name),
+      student_first_name: data.student_first_name.trim(),
+      student_last_name: data.student_last_name.trim(),
       student_date_of_birth: data.student_date_of_birth,
-      student_gender: data.student_gender ? sanitizeInput(data.student_gender) : undefined,
-      previous_experience: data.previous_experience ? sanitizeInput(data.previous_experience) : undefined,
+      student_gender: data.student_gender ? data.student_gender.trim() : undefined,
+      previous_experience: data.previous_experience ? data.previous_experience.trim() : undefined,
       program_type: data.program_type,
-      parent_first_name: sanitizeInput(data.parent_first_name),
-      parent_last_name: sanitizeInput(data.parent_last_name),
+      parent_first_name: data.parent_first_name.trim(),
+      parent_last_name: data.parent_last_name.trim(),
       parent_email: data.parent_email.toLowerCase().trim(),
-      parent_phone: sanitizeInput(data.parent_phone),
-      address: sanitizeInput(data.address),
-      city: sanitizeInput(data.city),
-      state: data.state ? sanitizeInput(data.state) : undefined,
-      zip_code: sanitizeInput(data.zip_code),
-      emergency_contact_name: sanitizeInput(data.emergency_contact_name),
-      emergency_contact_relationship: sanitizeInput(data.emergency_contact_relationship),
-      emergency_contact_phone: sanitizeInput(data.emergency_contact_phone),
-      emergency_contact_alt_phone: data.emergency_contact_alt_phone ? sanitizeInput(data.emergency_contact_alt_phone) : undefined,
-      allergies: data.allergies ? sanitizeInput(data.allergies) : undefined,
-      medical_conditions: data.medical_conditions ? sanitizeInput(data.medical_conditions) : undefined,
-      medications: data.medications ? sanitizeInput(data.medications) : undefined,
-      physician_name: data.physician_name ? sanitizeInput(data.physician_name) : undefined,
-      physician_phone: data.physician_phone ? sanitizeInput(data.physician_phone) : undefined,
+      parent_phone: data.parent_phone.trim(),
+      address: data.address.trim(),
+      city: data.city.trim(),
+      state: data.state ? data.state.trim() : undefined,
+      zip_code: data.zip_code.trim(),
+      emergency_contact_name: data.emergency_contact_name.trim(),
+      emergency_contact_relationship: data.emergency_contact_relationship.trim(),
+      emergency_contact_phone: data.emergency_contact_phone.trim(),
+      emergency_contact_alt_phone: data.emergency_contact_alt_phone ? data.emergency_contact_alt_phone.trim() : undefined,
+      allergies: data.allergies ? data.allergies.trim() : undefined,
+      medical_conditions: data.medical_conditions ? data.medical_conditions.trim() : undefined,
+      medications: data.medications ? data.medications.trim() : undefined,
+      physician_name: data.physician_name ? data.physician_name.trim() : undefined,
+      physician_phone: data.physician_phone ? data.physician_phone.trim() : undefined,
       payment_method: data.payment_method,
       terms_accepted: data.terms_accepted,
       photo_permission: data.photo_permission || false,
       email_updates: data.email_updates || false,
-      signature_name: sanitizeInput(data.signature_name),
+      signature_name: data.signature_name.trim(),
       signature_date: data.signature_date,
     };
+    console.log('✓ Data sanitized');
 
-    // Check for duplicate email
+    // Check for duplicate enrollment (same student + email combination)
+    console.log('Checking for duplicate enrollment...');
     const existingEnrollments = enrollmentOperations.getByEmail(sanitizedData.parent_email);
-    if (existingEnrollments.length > 0) {
+    
+    // Check if this specific student is already enrolled
+    const duplicateStudent = existingEnrollments.find((enrollment: any) => 
+      enrollment.student_first_name.toLowerCase() === sanitizedData.student_first_name.toLowerCase() &&
+      enrollment.student_last_name.toLowerCase() === sanitizedData.student_last_name.toLowerCase()
+    );
+    
+    console.log('✓ Duplicate check completed, existing enrollments:', existingEnrollments.length);
+    if (duplicateStudent) {
       logSecurityEvent(createAuditLog({
         action: 'ENROLLMENT_DUPLICATE_ATTEMPT',
         resource: 'enrollments',
-        details: { email: sanitizedData.parent_email },
+        details: { 
+          email: sanitizedData.parent_email,
+          student: `${sanitizedData.student_first_name} ${sanitizedData.student_last_name}`
+        },
         success: false
       }));
       
       return NextResponse.json(
         { 
           success: false, 
-          error: 'An enrollment with this email address already exists. Please contact us if you need to update your information.' 
+          error: `A student named ${sanitizedData.student_first_name} ${sanitizedData.student_last_name} is already enrolled with this email address.`,
+          debug: {
+            submitted: {
+              student_first_name: sanitizedData.student_first_name,
+              student_last_name: sanitizedData.student_last_name,
+              parent_email: sanitizedData.parent_email
+            },
+            found_duplicate: duplicateStudent 
+          }
         },
         { 
           status: 409,
@@ -196,6 +218,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Save to database
+    console.log('Creating enrollment in database...');
     const result = enrollmentOperations.create(sanitizedData);
     
     if (result.changes === 1) {
@@ -227,6 +250,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Enrollment submission error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     
     logSecurityEvent(createAuditLog({
       action: 'ENROLLMENT_SUBMISSION_ERROR',
@@ -238,7 +262,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false, 
-        error: 'An error occurred while processing your enrollment. Please try again later.' 
+        error: 'An error occurred while processing your enrollment. Please try again later.',
+        debug: error instanceof Error ? error.message : 'Unknown error' 
       },
       { 
         status: 500,

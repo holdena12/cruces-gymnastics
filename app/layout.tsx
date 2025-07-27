@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cruces Gymnastics Center - Premier Gymnastics Training in Las Cruces, NM",
-  description: "Join Cruces Gymnastics Center for top-quality gymnastics training in Las Cruces. We offer programs for all ages from toddlers to competitive athletes. Inspiring excellence, building confidence.",
-  keywords: "gymnastics, Las Cruces, New Mexico, gymnastics classes, competitive gymnastics, recreational gymnastics, toddler gymnastics, adult gymnastics",
+  title: "Cruces Gymnastics Center - Gymnastics Training in Las Cruces, NM",
+  description: "Cruces Gymnastics Center offers gymnastics training in Las Cruces. We provide programs for all ages from toddlers to competitive athletes.",
+  keywords: "gymnastics, Las Cruces, New Mexico, gymnastics classes, competitive gymnastics, recreational gymnastics, toddler gymnastics, ninja classes",
 };
 
 export default function RootLayout({
