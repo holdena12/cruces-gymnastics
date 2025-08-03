@@ -1,7 +1,9 @@
-"use client";
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import MobileNavigation from '../components/MobileNavigation';
 
 interface User {
   id: number;
@@ -48,6 +50,7 @@ export default function UserDashboard() {
         router.push('/login');
       }
     } catch (error) {
+      console.error('Auth check error:', error);
       router.push('/login');
     } finally {
       setLoading(false);
@@ -57,28 +60,11 @@ export default function UserDashboard() {
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
     }
-  };
-
-  const handleEditProfile = () => {
-    setIsEditing(true);
-    setUpdateMessage('');
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    // Reset form to original user data
-    if (user) {
-      setEditForm({
-        firstName: user.first_name,
-        lastName: user.last_name,
-        email: user.email
-      });
-    }
-    setUpdateMessage('');
   };
 
   const handleUpdateProfile = async () => {
@@ -87,11 +73,15 @@ export default function UserDashboard() {
 
     try {
       const response = await fetch('/api/auth/update-profile', {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify({
+          firstName: editForm.firstName,
+          lastName: editForm.lastName,
+          email: editForm.email,
+        }),
       });
 
       const result = await response.json();
@@ -122,339 +112,364 @@ export default function UserDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{background: 'var(--gray-50)'}}>
-      {/* Header */}
-      <header className="glass sticky top-0 z-50" style={{background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)'}}>
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Navigation */}
+      <MobileNavigation user={user} onLogout={handleLogout} />
+
+      {/* Desktop Navigation */}
+      <nav className="bg-white shadow-md border-b border-gray-200 desktop-nav hidden lg:block">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">CGC</span>
+              </div>
+              <span className="text-xl font-bold text-gray-900">
                 Cruces Gymnastics Center
+              </span>
+            </Link>
+
+            {/* Desktop Menu */}
+            <div className="hidden lg:flex items-center space-x-8">
+              <Link
+                href="/"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+              >
+                Home
               </Link>
+              <Link
+                href="/contact"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+              >
+                Contact
+              </Link>
+            </div>
+
+            {/* User & Actions */}
+            <div className="hidden lg:flex items-center space-x-4">
+              <span className="text-sm text-gray-600">Welcome, {user?.first_name}!</span>
               {user?.role === 'admin' && (
-                <Link href="/admin" 
-                  className="ml-6 px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300"
-                  style={{
-                    background: 'var(--gradient-primary)',
-                    color: 'white',
-                    boxShadow: 'var(--shadow-md)'
-                  }}
+                <Link
+                  href="/admin"
+                  className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
                 >
                   Admin Panel
                 </Link>
               )}
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-300 font-medium">Welcome, {user?.first_name}</span>
               <button
                 onClick={handleLogout}
-                className="px-6 py-2.5 rounded-xl font-semibold transition-all duration-300"
-                style={{
-                  background: 'var(--gradient-primary)',
-                  color: 'white',
-                  boxShadow: 'var(--shadow-md)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-                }}
+                className="text-gray-700 hover:text-red-600 text-sm font-medium transition-colors"
               >
-                Logout
+                Sign Out
               </button>
             </div>
           </div>
-        </nav>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Welcome Section */}
-        <div className="mb-12 animate-fade-in-up">
-          <h1 className="text-5xl font-bold mb-4" style={{color: 'var(--gray-900)'}}>Welcome back, {user?.first_name}!</h1>
-          <p className="text-xl" style={{color: 'var(--gray-600)'}}>Manage your account and enrollment applications</p>
         </div>
+      </nav>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          <Link href="/enroll" className="card-modern p-8 group">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300"
-                  style={{background: 'var(--primary-600)'}}
-                >
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-6">
-                <h3 className="text-2xl font-semibold mb-2" style={{color: 'var(--gray-900)'}}>New Enrollment</h3>
-                <p className="text-lg" style={{color: 'var(--gray-600)'}}>Apply for a new gymnastics program</p>
-              </div>
-            </div>
-          </Link>
-
-          <div className="card-modern p-8">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{background: 'var(--secondary-600)'}}
-                >
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-6">
-                <h3 className="text-2xl font-semibold mb-2" style={{color: 'var(--gray-900)'}}>View Applications</h3>
-                <p className="text-lg" style={{color: 'var(--gray-600)'}}>Check your enrollment status</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card-modern p-8">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{background: 'var(--accent-600)'}}
-                >
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-6">
-                <h3 className="text-2xl font-semibold mb-2" style={{color: 'var(--gray-900)'}}>Account Settings</h3>
-                <p className="text-lg" style={{color: 'var(--gray-600)'}}>Update your profile information</p>
-              </div>
-            </div>
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Welcome Back, {user?.first_name}!
+            </h1>
+            <p className="text-xl text-red-100 max-w-2xl mx-auto">
+              Manage your gymnastics journey and stay connected with Cruces Gymnastics Center.
+            </p>
           </div>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Account Information */}
-          <div className="card-modern">
-            <div className="px-8 py-6 border-b" style={{borderColor: 'var(--gray-200)'}}>
-              <h2 className="text-3xl font-semibold" style={{color: 'var(--gray-900)'}}>Account Information</h2>
-            </div>
-            <div className="p-8">
-              {/* Update Message */}
-              {updateMessage && (
-                <div 
-                  className={`mb-6 p-4 rounded-xl ${
-                    updateMessage.includes('successfully') 
-                      ? 'border' 
-                      : 'border'
-                  }`}
-                  style={{
-                    background: updateMessage.includes('successfully') ? 'var(--accent-50)' : 'var(--primary-50)',
-                    color: updateMessage.includes('successfully') ? 'var(--accent-800)' : 'var(--primary-800)',
-                    borderColor: updateMessage.includes('successfully') ? 'var(--accent-200)' : 'var(--primary-200)'
-                  }}
-                >
-                  {updateMessage}
+      {/* Dashboard Content */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <Link href="/enroll" className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow group">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-red-600 flex items-center justify-center transition-all duration-300 group-hover:bg-red-700">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </div>
                 </div>
-              )}
+                <div className="ml-6">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">New Enrollment</h3>
+                  <p className="text-gray-600">Apply for a new gymnastics program</p>
+                </div>
+              </div>
+            </Link>
 
-              <div className="space-y-6">
-                {isEditing ? (
-                  // Edit Mode
-                  <>
-                    <div>
-                      <label className="block text-lg font-semibold mb-3" style={{color: 'var(--gray-700)'}}>First Name</label>
-                      <input
-                        type="text"
-                        value={editForm.firstName}
-                        onChange={(e) => handleInputChange('firstName', e.target.value)}
-                        className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-300"
-                        style={{borderColor: 'var(--gray-300)', fontSize: '1.1rem'}}
-                        placeholder="Enter your first name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-lg font-semibold mb-3" style={{color: 'var(--gray-700)'}}>Last Name</label>
-                      <input
-                        type="text"
-                        value={editForm.lastName}
-                        onChange={(e) => handleInputChange('lastName', e.target.value)}
-                        className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-300"
-                        style={{borderColor: 'var(--gray-300)', fontSize: '1.1rem'}}
-                        placeholder="Enter your last name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-lg font-semibold mb-3" style={{color: 'var(--gray-700)'}}>Email Address</label>
-                      <input
-                        type="email"
-                        value={editForm.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-300"
-                        style={{borderColor: 'var(--gray-300)', fontSize: '1.1rem'}}
-                        placeholder="Enter your email address"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  // Display Mode
-                  <>
-                    <div>
-                      <label className="block text-lg font-semibold mb-2" style={{color: 'var(--gray-700)'}}>Full Name</label>
-                      <p className="text-xl" style={{color: 'var(--gray-900)'}}>{user?.first_name} {user?.last_name}</p>
-                    </div>
-                    <div>
-                      <label className="block text-lg font-semibold mb-2" style={{color: 'var(--gray-700)'}}>Email Address</label>
-                      <p className="text-xl" style={{color: 'var(--gray-900)'}}>{user?.email}</p>
-                    </div>
-                  </>
-                )}
-                
-                {/* Always show these fields */}
-                <div>
-                  <label className="block text-lg font-semibold mb-2" style={{color: 'var(--gray-700)'}}>Account Type</label>
-                  <span 
-                    className={`inline-flex px-4 py-2 text-sm font-semibold rounded-xl ${
-                      user?.role === 'admin' ? 'text-white' : 'text-white'
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-6">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">View Applications</h3>
+                  <p className="text-gray-600">Check your enrollment status</p>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setIsEditing(true)}
+              className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow text-left"
+            >
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-6">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Account Settings</h3>
+                  <p className="text-gray-600">Update your profile information</p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            {/* Account Information */}
+            <div className="bg-white rounded-lg shadow-lg">
+              <div className="px-8 py-6 border-b border-gray-200">
+                <h2 className="text-2xl font-semibold text-gray-900">Account Information</h2>
+              </div>
+              <div className="p-8">
+                {/* Update Message */}
+                {updateMessage && (
+                  <div 
+                    className={`mb-6 p-4 rounded-lg ${
+                      updateMessage.includes('successfully') 
+                        ? 'bg-green-50 border border-green-200 text-green-800' 
+                        : 'bg-red-50 border border-red-200 text-red-800'
                     }`}
-                    style={{
-                      background: user?.role === 'admin' ? 'var(--secondary-600)' : 'var(--gray-600)'
-                    }}
                   >
-                    {user?.role === 'admin' ? 'Administrator' : 'Member'}
-                  </span>
-                </div>
-                <div>
-                  <label className="block text-lg font-semibold mb-2" style={{color: 'var(--gray-700)'}}>Member Since</label>
-                  <p className="text-xl" style={{color: 'var(--gray-900)'}}>
-                    {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-lg font-semibold mb-2" style={{color: 'var(--gray-700)'}}>Last Login</label>
-                  <p className="text-xl" style={{color: 'var(--gray-900)'}}>
-                    {user?.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="mt-8 flex space-x-4">
-                {isEditing ? (
-                  <>
-                    <button
-                      onClick={handleUpdateProfile}
-                      disabled={updateLoading}
-                      className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        background: 'var(--accent-600)',
-                        color: 'white',
-                        boxShadow: 'var(--shadow-md)'
-                      }}
-                    >
-                      {updateLoading ? 'Saving...' : 'Save Changes'}
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      disabled={updateLoading}
-                      className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        background: 'var(--gray-600)',
-                        color: 'white',
-                        boxShadow: 'var(--shadow-md)'
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={handleEditProfile}
-                    className="px-6 py-3 rounded-xl font-semibold transition-all duration-300"
-                    style={{
-                      background: 'var(--gradient-primary)',
-                      color: 'white',
-                      boxShadow: 'var(--shadow-md)'
-                    }}
-                  >
-                    Update Profile
-                  </button>
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        {updateMessage.includes('successfully') ? (
+                          <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium">{updateMessage}</p>
+                      </div>
+                    </div>
+                  </div>
                 )}
-              </div>
-            </div>
-          </div>
 
-          {/* Quick Stats */}
-          <div className="card-modern">
-            <div className="px-8 py-6 border-b" style={{borderColor: 'var(--gray-200)'}}>
-              <h2 className="text-3xl font-semibold" style={{color: 'var(--gray-900)'}}>Your Activity</h2>
-            </div>
-            <div className="p-8">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="text-center p-6 rounded-xl" style={{background: 'var(--gray-50)'}}>
-                  <p className="text-4xl font-bold mb-2" style={{color: 'var(--primary-600)'}}>0</p>
-                  <p className="text-lg" style={{color: 'var(--gray-600)'}}>Active Enrollments</p>
+                <div className="space-y-6">
+                  {isEditing ? (
+                    // Edit Mode
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                        <input
+                          type="text"
+                          value={editForm.firstName}
+                          onChange={(e) => handleInputChange('firstName', e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent transition-colors"
+                          placeholder="Enter your first name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                        <input
+                          type="text"
+                          value={editForm.lastName}
+                          onChange={(e) => handleInputChange('lastName', e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent transition-colors"
+                          placeholder="Enter your last name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                        <input
+                          type="email"
+                          value={editForm.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent transition-colors"
+                          placeholder="Enter your email address"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    // Display Mode
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <p className="text-lg text-gray-900">{user?.first_name} {user?.last_name}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                        <p className="text-lg text-gray-900">{user?.email}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          user?.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {user?.role === 'admin' ? 'Administrator' : 'Student'}
+                        </span>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Member Since</label>
+                        <p className="text-lg text-gray-900">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="text-center p-6 rounded-xl" style={{background: 'var(--gray-50)'}}>
-                  <p className="text-4xl font-bold mb-2" style={{color: 'var(--secondary-600)'}}>0</p>
-                  <p className="text-lg" style={{color: 'var(--gray-600)'}}>Applications Submitted</p>
-                </div>
-                <div className="text-center p-6 rounded-xl" style={{background: 'var(--gray-50)'}}>
-                  <p className="text-4xl font-bold mb-2" style={{color: 'var(--accent-600)'}}>0</p>
-                  <p className="text-lg" style={{color: 'var(--gray-600)'}}>Programs Completed</p>
-                </div>
-                <div className="text-center p-6 rounded-xl" style={{background: 'var(--gray-50)'}}>
-                  <p className="text-4xl font-bold mb-2" style={{color: 'var(--gray-700)'}}>0</p>
-                  <p className="text-lg" style={{color: 'var(--gray-600)'}}>Certificates Earned</p>
+                
+                <div className="mt-8 flex space-x-4">
+                  {isEditing ? (
+                    <>
+                      <button
+                        onClick={handleUpdateProfile}
+                        disabled={updateLoading}
+                        className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {updateLoading ? 'Saving...' : 'Save Changes'}
+                      </button>
+                      <button
+                        onClick={() => setIsEditing(false)}
+                        disabled={updateLoading}
+                        className="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+                    >
+                      Update Profile
+                    </button>
+                  )}
                 </div>
               </div>
-              
-              <div className="mt-8 p-6 rounded-xl" style={{background: 'var(--primary-50)', border: '1px solid var(--primary-200)'}}>
-                <h3 className="text-2xl font-semibold mb-3" style={{color: 'var(--primary-900)'}}>Welcome to Cruces Gymnastics!</h3>
-                <p className="text-lg mb-4" style={{color: 'var(--primary-700)'}}>
-                  Start by submitting an enrollment application to join one of our programs.
-                </p>
-                <Link href="/enroll" 
-                  className="inline-block px-6 py-3 rounded-xl font-semibold transition-all duration-300"
-                  style={{
-                    background: 'var(--gradient-primary)',
-                    color: 'white',
-                    boxShadow: 'var(--shadow-md)'
-                  }}
-                >
-                  Get Started
-                </Link>
+            </div>
+
+            {/* Activity Overview */}
+            <div className="bg-white rounded-lg shadow-lg">
+              <div className="px-8 py-6 border-b border-gray-200">
+                <h2 className="text-2xl font-semibold text-gray-900">Your Activity</h2>
+              </div>
+              <div className="p-8">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="text-center p-6 bg-gray-50 rounded-lg">
+                    <p className="text-3xl font-bold text-red-600 mb-2">0</p>
+                    <p className="text-sm text-gray-600">Active Enrollments</p>
+                  </div>
+                  <div className="text-center p-6 bg-gray-50 rounded-lg">
+                    <p className="text-3xl font-bold text-blue-600 mb-2">0</p>
+                    <p className="text-sm text-gray-600">Applications Submitted</p>
+                  </div>
+                  <div className="text-center p-6 bg-gray-50 rounded-lg">
+                    <p className="text-3xl font-bold text-green-600 mb-2">0</p>
+                    <p className="text-sm text-gray-600">Programs Completed</p>
+                  </div>
+                  <div className="text-center p-6 bg-gray-50 rounded-lg">
+                    <p className="text-3xl font-bold text-purple-600 mb-2">0</p>
+                    <p className="text-sm text-gray-600">Certificates Earned</p>
+                  </div>
+                </div>
+                
+                <div className="mt-8 p-6 bg-red-50 border border-red-200 rounded-lg">
+                  <h3 className="text-xl font-semibold text-red-900 mb-3">Welcome to Cruces Gymnastics!</h3>
+                  <p className="text-red-700 mb-4">
+                    Start by submitting an enrollment application to join one of our programs.
+                  </p>
+                  <Link href="/enroll" 
+                    className="inline-block bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+                  >
+                    Get Started
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Recent Activity (placeholder) */}
-        <div className="mt-12 card-modern">
-          <div className="px-8 py-6 border-b" style={{borderColor: 'var(--gray-200)'}}>
-            <h2 className="text-3xl font-semibold" style={{color: 'var(--gray-900)'}}>Recent Activity</h2>
-          </div>
-          <div className="p-8">
-            <div className="text-center py-12">
-              <svg className="mx-auto h-16 w-16 mb-4" style={{color: 'var(--gray-400)'}} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="text-2xl font-semibold mb-2" style={{color: 'var(--gray-900)'}}>No activity yet</h3>
-              <p className="text-lg" style={{color: 'var(--gray-500)'}}>Start by enrolling in a program.</p>
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Company Info */}
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">CGC</span>
+                </div>
+                <span className="text-xl font-bold">Cruces Gymnastics Center</span>
+              </div>
+              <p className="text-gray-300 mb-4">
+                Premier gymnastics training in Las Cruces, New Mexico. Building confidence, 
+                character, and champions since 2020.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+              <ul className="space-y-2">
+                <li><Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link></li>
+                <li><Link href="/enroll" className="text-gray-300 hover:text-white transition-colors">Enroll Now</Link></li>
+                <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
+                <li><Link href="/privacy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
+              </ul>
+            </div>
+
+            {/* Contact Info */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
+              <div className="space-y-2 text-gray-300">
+                <p>📍 123 Gymnastics Way<br />Las Cruces, NM 88001</p>
+                <p>📞 (575) XXX-XXXX</p>
+                <p>✉️ info@crucesgymnastics.com</p>
+                <div className="mt-4">
+                  <h4 className="font-semibold text-white mb-2">Hours</h4>
+                  <p className="text-sm">Mon-Fri: 3:00 PM - 8:00 PM</p>
+                  <p className="text-sm">Saturday: 9:00 AM - 5:00 PM</p>
+                  <p className="text-sm">Sunday: 10:00 AM - 4:00 PM</p>
+                </div>
+              </div>
             </div>
           </div>
+
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Cruces Gymnastics Center. All rights reserved.</p>
+          </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
-} 
+}

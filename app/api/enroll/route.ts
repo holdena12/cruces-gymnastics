@@ -13,7 +13,7 @@ const enrollmentSchema = z.object({
   previous_experience: z.string().optional(),
   
   // Program Selection
-  program_type: z.enum(['preschool', 'recreational', 'competitive', 'adult'], {
+  program_type: z.enum(['preschool', 'boys_recreational', 'girls_recreational', 'boys_competitive', 'girls_competitive', 'ninja'], {
     message: 'Valid program type is required'
   }),
   
@@ -200,7 +200,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false, 
-          error: `A student named ${sanitizedData.student_first_name} ${sanitizedData.student_last_name} is already enrolled with this email address.`,
+          error: `Good news! ${sanitizedData.student_first_name} ${sanitizedData.student_last_name} already has an enrollment application on file with this email address. You don't need to submit another application.`,
+          enrollmentExists: true,
+          studentName: `${sanitizedData.student_first_name} ${sanitizedData.student_last_name}`,
           debug: {
             submitted: {
               student_first_name: sanitizedData.student_first_name,

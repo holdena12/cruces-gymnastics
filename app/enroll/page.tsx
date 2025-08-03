@@ -1,13 +1,67 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import MobileNavigation from '../components/MobileNavigation';
+
+// Payment amounts by program type
+const getRegistrationFee = (programType: string): number => {
+  const fees: { [key: string]: number } = {
+    'preschool': 35,
+    'boys_recreational': 50,
+    'girls_recreational': 50,
+    'boys_competitive': 75,
+    'girls_competitive': 75,
+    'ninja': 40
+  };
+  return fees[programType] || 50;
+};
+
+interface User {
+  id: number;
+  email: string;
+  role: string;
+}
 
 export default function EnrollPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     success: boolean;
     message: string;
+    type?: 'success' | 'error' | 'info';
+    enrollmentId?: number;
+    programType?: string;
   } | null>(null);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      const result = await response.json();
+
+      if (result.success) {
+        setUser(result.user);
+      }
+    } catch (error) {
+      // User not logged in - that's fine
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,18 +87,11 @@ export default function EnrollPage() {
       emergency_contact_name: formData.get('emergency_contact_name'),
       emergency_contact_relationship: formData.get('emergency_contact_relationship'),
       emergency_contact_phone: formData.get('emergency_contact_phone'),
-      emergency_contact_alt_phone: formData.get('emergency_contact_alt_phone'),
-      allergies: formData.get('allergies'),
       medical_conditions: formData.get('medical_conditions'),
       medications: formData.get('medications'),
-      physician_name: formData.get('physician_name'),
-      physician_phone: formData.get('physician_phone'),
-      payment_method: formData.get('payment-method'),
-      terms_accepted: formData.get('terms_accepted') === 'on',
+      emergency_medical_treatment: formData.get('emergency_medical_treatment') === 'on',
+      liability_waiver: formData.get('liability_waiver') === 'on',
       photo_permission: formData.get('photo_permission') === 'on',
-      email_updates: formData.get('email_updates') === 'on',
-      signature_name: formData.get('signature_name'),
-      signature_date: formData.get('signature_date'),
     };
 
     try {
@@ -57,50 +104,124 @@ export default function EnrollPage() {
       });
 
       const result = await response.json();
-
-      if (result.success) {
+      
+      if (response.ok) {
         setSubmitStatus({
           success: true,
-          message: result.message,
+          message: result.message || 'Enrollment application submitted successfully!',
+          type: 'success',
+          enrollmentId: result.enrollmentId,
+          programType: data.program_type as string
         });
+        
         // Reset form
-        e.currentTarget.reset();
+        (e.target as HTMLFormElement).reset();
       } else {
+        let errorMessage = result.message || 'Failed to submit enrollment application.';
+        let messageType: 'error' | 'info' = 'error';
+        
+        if (response.status === 409) {
+          messageType = 'info';
+        }
+        
         setSubmitStatus({
           success: false,
-          message: result.error || 'An error occurred while submitting your enrollment.',
+          message: errorMessage,
+          type: messageType,
         });
       }
     } catch (error) {
       setSubmitStatus({
         success: false,
         message: 'Network error. Please check your connection and try again.',
+        type: 'error',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header/Navigation */}
-      <header className="bg-gray-900 shadow-md sticky top-0 z-50">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-red-600">Cruces Gymnastics Center</Link>
-            </div>
-            <div className="hidden md:flex space-x-8">
-              <Link href="/#home" className="text-gray-300 hover:text-red-500 transition-colors">Home</Link>
-              <Link href="/#programs" className="text-gray-300 hover:text-red-500 transition-colors">Programs</Link>
-              <Link href="/#coaches" className="text-gray-300 hover:text-red-500 transition-colors">Coaches</Link>
-              <Link href="/#contact" className="text-gray-300 hover:text-red-500 transition-colors">Contact</Link>
-            </div>
-            <Link href="/enroll" className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
-              Enroll Now
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Navigation */}
+      <MobileNavigation user={user} onLogout={handleLogout} />
+
+      {/* Desktop Navigation */}
+      <nav className="bg-white shadow-md border-b border-gray-200 desktop-nav hidden lg:block">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">CGC</span>
+              </div>
+              <span className="text-xl font-bold text-gray-900">
+                Cruces Gymnastics Center
+              </span>
             </Link>
+
+            {/* Desktop Menu */}
+            <div className="hidden lg:flex items-center space-x-8">
+              <Link
+                href="/"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+              >
+                Home
+              </Link>
+              <Link
+                href="/contact"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+              >
+                Contact
+              </Link>
+            </div>
+
+            {/* Auth Buttons */}
+            <div className="hidden lg:flex items-center space-x-4">
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-600">Hello, {user.email}</span>
+                  <Link
+                    href="/dashboard"
+                    className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  {user.role === 'admin' && (
+                    <Link
+                      href="/admin"
+                      className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
+                    >
+                      Admin
+                    </Link>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-700 hover:text-red-600 text-sm font-medium"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <Link
+                    href="/login"
+                    className="text-gray-700 hover:text-red-600 text-sm font-medium"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Create Account
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
-        </nav>
-      </header>
+        </div>
+      </nav>
 
       {/* Enrollment Form Section */}
       <section className="py-12">
@@ -114,277 +235,472 @@ export default function EnrollPage() {
           {/* Status Message */}
           {submitStatus && (
             <div className={`mb-8 p-4 rounded-lg ${
-              submitStatus.success 
-                ? 'bg-green-100 border border-green-400 text-green-700' 
-                : 'bg-red-100 border border-red-400 text-red-700'
+              submitStatus.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
+              submitStatus.type === 'info' ? 'bg-blue-50 border border-blue-200 text-blue-800' :
+              'bg-red-50 border border-red-200 text-red-800'
             }`}>
               <p className="font-medium">{submitStatus.message}</p>
-              {submitStatus.success && (
-                <p className="text-sm mt-2">Your enrollment application has been received. We will contact you within 24 hours to complete the enrollment process and confirm your first class.</p>
+            </div>
+          )}
+
+          {submitStatus?.success && (
+            <div className="mt-4">
+              <p className="text-sm mb-4">Your enrollment application has been received. We will contact you within 24 hours to complete the enrollment process and confirm your first class.</p>
+
+              {/* Payment Options */}
+              {submitStatus.enrollmentId && submitStatus.programType && (
+                <div className="bg-white border border-green-300 rounded-lg p-4 mt-4">
+                  <h3 className="font-semibold text-green-800 mb-3">Complete Your Registration</h3>
+                  <p className="text-sm text-green-700 mb-4">
+                    Secure your spot by paying the registration fee now. You can also pay later if you prefer.
+                  </p>
+
+                  <div className="bg-green-50 p-3 rounded-md mb-4">
+                    <div className="flex justify-between items-center text-sm">
+                      <span>Registration Fee:</span>
+                      <span className="font-semibold">${getRegistrationFee(submitStatus.programType).toFixed(2)}</span>
+                    </div>
+                    <div className="text-xs text-green-600 mt-1">
+                      One-time fee to secure enrollment
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Link
+                      href={`/payment?enrollmentId=${submitStatus.enrollmentId}&type=registration`}
+                      className="flex-1 bg-green-600 text-white text-center py-2 px-4 rounded-md hover:bg-green-700 text-sm font-medium"
+                    >
+                      Pay Registration Fee Now
+                    </Link>
+                    <button
+                      onClick={() => setSubmitStatus(null)}
+                      className="flex-1 bg-white border border-green-600 text-green-600 py-2 px-4 rounded-md hover:bg-green-50 text-sm font-medium"
+                    >
+                      I'll Pay Later
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-green-600 mt-3 text-center">
+                    💳 Secure payment powered by Stripe • No additional fees
+                  </p>
+                </div>
               )}
             </div>
           )}
 
           {/* Enrollment Form */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <form className="space-y-8" onSubmit={handleSubmit}>
-              
-              {/* Student Information Section */}
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Student Information */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Student Information</h2>
-                <div className="grid md:grid-cols-2 gap-6">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Student Information</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                    <input type="text" name="student_first_name" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Enter first name" />
+                    <label htmlFor="student_first_name" className="block text-sm font-medium text-gray-700 mb-2">
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="student_first_name"
+                      name="student_first_name"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
-                    <input type="text" name="student_last_name" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Enter last name" />
+                    <label htmlFor="student_last_name" className="block text-sm font-medium text-gray-700 mb-2">
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="student_last_name"
+                      name="student_last_name"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth *</label>
-                    <input type="date" name="student_date_of_birth" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" />
+                    <label htmlFor="student_date_of_birth" className="block text-sm font-medium text-gray-700 mb-2">
+                      Date of Birth *
+                    </label>
+                    <input
+                      type="date"
+                      id="student_date_of_birth"
+                      name="student_date_of_birth"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-                    <select name="student_gender" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent">
-                      <option value="">Select gender</option>
-                      <option value="female">Female</option>
+                    <label htmlFor="student_gender" className="block text-sm font-medium text-gray-700 mb-2">
+                      Gender *
+                    </label>
+                    <select
+                      id="student_gender"
+                      name="student_gender"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    >
+                      <option value="">Select Gender</option>
                       <option value="male">Male</option>
+                      <option value="female">Female</option>
                       <option value="other">Other</option>
                     </select>
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Previous Gymnastics Experience</label>
-                    <textarea rows={3} name="previous_experience" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Describe any previous gymnastics experience, skills learned, etc."></textarea>
-                  </div>
                 </div>
               </div>
 
-              {/* Program Selection Section */}
+              {/* Program Selection */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Program Selection</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Select Program Type *</label>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <label className="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input type="radio" name="program" value="preschool" required className="text-red-600 focus:ring-red-600" />
-                        <div>
-                          <span className="font-medium">Pre-School Gymnastics</span>
-                          <p className="text-sm text-gray-600">Ages 18 months - 5 years | $80/month</p>
-                        </div>
-                      </label>
-                      <label className="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input type="radio" name="program" value="recreational" required className="text-red-600 focus:ring-red-600" />
-                        <div>
-                          <span className="font-medium">Recreational Gymnastics</span>
-                          <p className="text-sm text-gray-600">Ages 6-12 | $95/month</p>
-                        </div>
-                      </label>
-                      <label className="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input type="radio" name="program" value="competitive" required className="text-red-600 focus:ring-red-600" />
-                        <div>
-                          <span className="font-medium">Competitive Team</span>
-                          <p className="text-sm text-gray-600">Ages 7+ | $150+/month</p>
-                        </div>
-                      </label>
-                      <label className="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input type="radio" name="program" value="ninja" required className="text-red-600 focus:ring-red-600" />
-                        <div>
-                          <span className="font-medium">Ninja Classes</span>
-                          <p className="text-sm text-gray-600">Ages 4-16 | $85/month</p>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* Parent/Guardian Information Section */}
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Parent/Guardian Information</h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian First Name *</label>
-                    <input type="text" name="parent_first_name" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Enter first name" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Last Name *</label>
-                    <input type="text" name="parent_last_name" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Enter last name" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-                    <input type="email" name="parent_email" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Enter email address" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                    <input type="tel" name="parent_phone" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="(575) 123-4567" />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Address *</label>
-                    <input type="text" name="address" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Enter street address" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                    <input type="text" name="city" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Las Cruces" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
-                    <input type="text" name="state" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="NM" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Zip Code *</label>
-                    <input type="text" name="zip_code" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="88001" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Emergency Contact Section */}
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Emergency Contact</h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Name *</label>
-                    <input type="text" name="emergency_contact_name" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Enter emergency contact name" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Relationship to Student *</label>
-                    <input type="text" name="emergency_contact_relationship" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="e.g., Grandparent, Aunt, Family Friend" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Phone *</label>
-                    <input type="tel" name="emergency_contact_phone" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="(575) 123-4567" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Alternative Phone</label>
-                    <input type="tel" name="emergency_contact_alt_phone" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="(575) 123-4567" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Medical Information Section */}
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Medical Information</h2>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Known Allergies</label>
-                    <textarea rows={3} name="allergies" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="List any known allergies or write 'None'"></textarea>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Medical Conditions</label>
-                    <textarea rows={3} name="medical_conditions" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="List any medical conditions we should be aware of or write 'None'"></textarea>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Medications</label>
-                    <textarea rows={3} name="medications" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="List any medications currently being taken or write 'None'"></textarea>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Physician Name</label>
-                    <input type="text" name="physician_name" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Enter physician name" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Physician Phone</label>
-                    <input type="tel" name="physician_phone" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="(575) 123-4567" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Information Section */}
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Payment Information</h2>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method *</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center space-x-3">
-                        <input type="radio" name="payment-method" value="monthly" className="text-red-600 focus:ring-red-600" />
-                        <span>Monthly Auto-Pay (Credit/Debit Card)</span>
-                      </label>
-                      <label className="flex items-center space-x-3">
-                        <input type="radio" name="payment-method" value="check" className="text-red-600 focus:ring-red-600" />
-                        <span>Monthly Check</span>
-                      </label>
-                      <label className="flex items-center space-x-3">
-                        <input type="radio" name="payment-method" value="cash" className="text-red-600 focus:ring-red-600" />
-                        <span>Monthly Cash Payment</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <h3 className="font-medium text-gray-900 mb-4">Additional Fees (if applicable)</h3>
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <p>• Registration Fee: $[AMOUNT] (one-time)</p>
-                      <p>• Equipment Fee: $[AMOUNT] (annual)</p>
-                      <p>• Competition Fees: $[AMOUNT] (competitive team only)</p>
-                      <p>• Late Payment Fee: $[AMOUNT]</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Terms and Conditions Section */}
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Terms and Conditions</h2>
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <h3 className="font-medium text-gray-900 mb-3">Please review and acknowledge:</h3>
-                    <div className="space-y-3 text-sm text-gray-700">
-                      <p>• I understand the cancellation policy [DETAILS TO BE FILLED]</p>
-                      <p>• I agree to the payment terms and policies [DETAILS TO BE FILLED]</p>
-                      <p>• I understand the make-up class policy [DETAILS TO BE FILLED]</p>
-                      <p>• I acknowledge the risk and liability policy [DETAILS TO BE FILLED]</p>
-                      <p>• I agree to the dress code and behavior expectations [DETAILS TO BE FILLED]</p>
-                    </div>
-                  </div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Program Selection</h2>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-4">
+                    Select Program Type *
+                  </label>
                   <div className="space-y-3">
-                    <label className="flex items-start space-x-3">
-                      <input type="checkbox" name="terms_accepted" required className="mt-1 text-red-600 focus:ring-red-600" />
-                      <span className="text-sm text-gray-700">I have read and agree to the terms and conditions, liability waiver, and all policies of Cruces Gymnastics Center. *</span>
+                    <div className="flex items-center">
+                      <input
+                        id="preschool"
+                        name="program"
+                        type="radio"
+                        value="preschool"
+                        required
+                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                      />
+                      <label htmlFor="preschool" className="ml-3 text-sm font-medium text-gray-700">
+                        Pre-School Gymnastics
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        id="boys_recreational"
+                        name="program"
+                        type="radio"
+                        value="boys_recreational"
+                        required
+                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                      />
+                      <label htmlFor="boys_recreational" className="ml-3 text-sm font-medium text-gray-700">
+                        Boys Recreational Gymnastics
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        id="girls_recreational"
+                        name="program"
+                        type="radio"
+                        value="girls_recreational"
+                        required
+                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                      />
+                      <label htmlFor="girls_recreational" className="ml-3 text-sm font-medium text-gray-700">
+                        Girls Recreational Gymnastics
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        id="boys_competitive"
+                        name="program"
+                        type="radio"
+                        value="boys_competitive"
+                        required
+                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                      />
+                      <label htmlFor="boys_competitive" className="ml-3 text-sm font-medium text-gray-700">
+                        Boys Competitive Gymnastics
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        id="girls_competitive"
+                        name="program"
+                        type="radio"
+                        value="girls_competitive"
+                        required
+                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                      />
+                      <label htmlFor="girls_competitive" className="ml-3 text-sm font-medium text-gray-700">
+                        Girls Competitive Gymnastics
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        id="ninja"
+                        name="program"
+                        type="radio"
+                        value="ninja"
+                        required
+                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                      />
+                      <label htmlFor="ninja" className="ml-3 text-sm font-medium text-gray-700">
+                        Ninja Classes
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <label htmlFor="previous_experience" className="block text-sm font-medium text-gray-700 mb-2">
+                    Previous Gymnastics Experience
+                  </label>
+                  <select
+                    id="previous_experience"
+                    name="previous_experience"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  >
+                    <option value="">Select experience level</option>
+                    <option value="none">No experience</option>
+                    <option value="beginner">Beginner (some classes)</option>
+                    <option value="intermediate">Intermediate (1-2 years)</option>
+                    <option value="advanced">Advanced (3+ years)</option>
+                    <option value="competitive">Competitive experience</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Parent/Guardian Information */}
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Parent/Guardian Information</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="parent_first_name" className="block text-sm font-medium text-gray-700 mb-2">
+                      First Name *
                     </label>
-                    <label className="flex items-start space-x-3">
-                      <input type="checkbox" name="photo_permission" className="mt-1 text-red-600 focus:ring-red-600" />
-                      <span className="text-sm text-gray-700">I give permission for my child to be photographed/videotaped for promotional purposes.</span>
+                    <input
+                      type="text"
+                      id="parent_first_name"
+                      name="parent_first_name"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="parent_last_name" className="block text-sm font-medium text-gray-700 mb-2">
+                      Last Name *
                     </label>
-                    <label className="flex items-start space-x-3">
-                      <input type="checkbox" name="email_updates" className="mt-1 text-red-600 focus:ring-red-600" />
-                      <span className="text-sm text-gray-700">I would like to receive email updates about events, camps, and special programs.</span>
+                    <input
+                      type="text"
+                      id="parent_last_name"
+                      name="parent_last_name"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="parent_email" className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address *
                     </label>
+                    <input
+                      type="email"
+                      id="parent_email"
+                      name="parent_email"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="parent_phone" className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      id="parent_phone"
+                      name="parent_phone"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Signature Section */}
+              {/* Address Information */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Electronic Signature</h2>
-                <div className="grid md:grid-cols-2 gap-6">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Address Information</h2>
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Signature (Type Full Name) *</label>
-                    <input type="text" name="signature_name" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Type your full name as electronic signature" />
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                      Street Address *
+                    </label>
+                    <input
+                      type="text"
+                      id="address"
+                      name="address"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
-                    <input type="date" name="signature_date" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent" />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        id="city"
+                        name="city"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                        State *
+                      </label>
+                      <select
+                        id="state"
+                        name="state"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      >
+                        <option value="">Select State</option>
+                        <option value="NM">New Mexico</option>
+                        <option value="TX">Texas</option>
+                        <option value="AZ">Arizona</option>
+                        <option value="CO">Colorado</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="zip_code" className="block text-sm font-medium text-gray-700 mb-2">
+                        ZIP Code *
+                      </label>
+                      <input
+                        type="text"
+                        id="zip_code"
+                        name="zip_code"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      />
+                    </div>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mt-3">By typing your name above, you are providing your electronic signature and agree that it has the same legal effect as a handwritten signature.</p>
+              </div>
+
+              {/* Emergency Contact */}
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Emergency Contact</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label htmlFor="emergency_contact_name" className="block text-sm font-medium text-gray-700 mb-2">
+                      Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="emergency_contact_name"
+                      name="emergency_contact_name"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="emergency_contact_relationship" className="block text-sm font-medium text-gray-700 mb-2">
+                      Relationship *
+                    </label>
+                    <input
+                      type="text"
+                      id="emergency_contact_relationship"
+                      name="emergency_contact_relationship"
+                      required
+                      placeholder="e.g., Grandparent, Uncle, Friend"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="emergency_contact_phone" className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      id="emergency_contact_phone"
+                      name="emergency_contact_phone"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Medical Information */}
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Medical Information</h2>
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="medical_conditions" className="block text-sm font-medium text-gray-700 mb-2">
+                      Medical Conditions, Allergies, or Special Needs
+                    </label>
+                    <textarea
+                      id="medical_conditions"
+                      name="medical_conditions"
+                      rows={3}
+                      placeholder="Please list any medical conditions, allergies, or special needs we should be aware of."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="medications" className="block text-sm font-medium text-gray-700 mb-2">
+                      Current Medications
+                    </label>
+                    <textarea
+                      id="medications"
+                      name="medications"
+                      rows={2}
+                      placeholder="List any medications your child is currently taking."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Waivers and Permissions */}
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Waivers and Permissions</h2>
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <input
+                      id="emergency_medical_treatment"
+                      name="emergency_medical_treatment"
+                      type="checkbox"
+                      required
+                      className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="emergency_medical_treatment" className="ml-3 text-sm text-gray-700">
+                      I give permission for emergency medical treatment if needed. *
+                    </label>
+                  </div>
+                  <div className="flex items-start">
+                    <input
+                      id="liability_waiver"
+                      name="liability_waiver"
+                      type="checkbox"
+                      required
+                      className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="liability_waiver" className="ml-3 text-sm text-gray-700">
+                      I acknowledge and accept the liability waiver and understand the risks involved in gymnastics activities. *
+                    </label>
+                  </div>
+                  <div className="flex items-start">
+                    <input
+                      id="photo_permission"
+                      name="photo_permission"
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="photo_permission" className="ml-3 text-sm text-gray-700">
+                      I give permission for my child's photo to be used for promotional purposes.
+                    </label>
+                  </div>
+                </div>
               </div>
 
               {/* Submit Button */}
-              <div className="text-center">
-                <button 
-                  type="submit" 
+              <div className="flex justify-center">
+                <button
+                  type="submit"
                   disabled={isSubmitting}
-                  className={`px-12 py-4 rounded-lg font-semibold text-lg transition-colors ${
-                    isSubmitting 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-red-600 hover:bg-red-700'
-                  } text-white`}
+                  className="bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit Enrollment Application'}
                 </button>
-                <p className="text-sm text-gray-600 mt-4">After submitting, we will contact you within 24 hours to complete the enrollment process.</p>
               </div>
             </form>
           </div>
@@ -394,20 +710,55 @@ export default function EnrollPage() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4 text-red-500">Cruces Gymnastics Center</h2>
-            <p className="text-gray-400 mb-6">Quality gymnastics training in Las Cruces.</p>
-            <div className="flex justify-center space-x-6">
-              <a href="https://facebook.com/crucesgymnastics" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-red-500 transition-colors">Facebook</a>
-              <a href="https://instagram.com/crucesgymnastics" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-red-500 transition-colors">Instagram</a>
-              <a href="https://youtube.com/@crucesgymnastics" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-red-500 transition-colors">YouTube</a>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Company Info */}
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">CGC</span>
+                </div>
+                <span className="text-xl font-bold">Cruces Gymnastics Center</span>
+              </div>
+              <p className="text-gray-300 mb-4">
+                Premier gymnastics training in Las Cruces, New Mexico. Building confidence, 
+                character, and champions since 2020.
+              </p>
             </div>
-            <div className="mt-8 pt-8 border-t border-gray-800 text-gray-400">
-              <p>&copy; 2025 Cruces Gymnastics Center. All rights reserved.</p>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+              <ul className="space-y-2">
+                <li><Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link></li>
+                <li><Link href="/enroll" className="text-gray-300 hover:text-white transition-colors">Enroll Now</Link></li>
+                <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
+                <li><Link href="/privacy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
+              </ul>
             </div>
+
+            {/* Contact Info */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
+              <div className="space-y-2 text-gray-300">
+                <p>📍 123 Gymnastics Way<br />Las Cruces, NM 88001</p>
+                <p>📞 (575) XXX-XXXX</p>
+                <p>✉️ info@crucesgymnastics.com</p>
+                <div className="mt-4">
+                  <h4 className="font-semibold text-white mb-2">Hours</h4>
+                  <p className="text-sm">Mon-Fri: 3:00 PM - 8:00 PM</p>
+                  <p className="text-sm">Saturday: 9:00 AM - 5:00 PM</p>
+                  <p className="text-sm">Sunday: 10:00 AM - 4:00 PM</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Cruces Gymnastics Center. All rights reserved.</p>
           </div>
         </div>
       </footer>
     </div>
   );
-} 
+}

@@ -70,9 +70,9 @@ export async function PATCH(request: NextRequest) {
 
     switch (action) {
       case 'updateRole':
-        if (!role || !['user', 'admin'].includes(role)) {
+        if (!role || !['user', 'admin', 'coach'].includes(role)) {
           return NextResponse.json(
-            { success: false, error: 'Valid role is required' },
+            { success: false, error: 'Valid role is required (user, admin, or coach)' },
             { status: 400 }
           );
         }

@@ -6,7 +6,7 @@ import { classOperations } from '@/lib/database';
 async function verifyAdmin(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value;
   if (!token) return null;
-S
+  
   const authResult = authOperations.verifyToken(token);
   if (!authResult.valid || authResult.user.role !== 'admin') return null;
 

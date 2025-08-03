@@ -1,7 +1,9 @@
-"use client";
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import MobileNavigation from '../components/MobileNavigation';
 
 interface User {
   id: number;
@@ -59,14 +61,74 @@ interface Enrollment {
   status: string;
 }
 
+interface Class {
+  id: number;
+  name: string;
+  program_type: string;
+  instructor_id?: number;
+  day_of_week: string;
+  start_time: string;
+  end_time: string;
+  capacity: number;
+  age_min?: number;
+  age_max?: number;
+  skill_level?: string;
+  monthly_price?: number;
+  active: boolean;
+  enrolled_students: EnrolledStudent[];
+  enrollment_count: number;
+}
+
+interface EnrolledStudent {
+  id: number;
+  student_name: string;
+  student_first_name: string;
+  student_last_name: string;
+  parent_email: string;
+  enrollment_date: string;
+}
+
+interface Payment {
+  id: number;
+  student_id?: number;
+  enrollment_id?: number;
+  amount: number;
+  payment_type: string;
+  payment_method: string;
+  payment_status: string;
+  stripe_payment_intent_id?: string;
+  stripe_customer_id?: string;
+  currency: string;
+  description?: string;
+  due_date?: string;
+  paid_date?: string;
+  refunded_date?: string;
+  refund_amount?: number;
+  processing_fee?: number;
+  parent_email?: string;
+  billing_address?: string;
+  failure_reason?: string;
+  receipt_url?: string;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+  student_first_name?: string;
+  student_last_name?: string;
+  parent_first_name?: string;
+  parent_last_name?: string;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'enrollments' | 'users' | 'staff'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'enrollments' | 'users' | 'staff' | 'classes' | 'payments'>('overview');
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentSummary, setPaymentSummary] = useState<any>(null);
   const [editingUser, setEditingUser] = useState<number | null>(null);
   const [updateLoading, setUpdateLoading] = useState<number | null>(null);
   const [updateMessage, setUpdateMessage] = useState('');
@@ -142,6 +204,21 @@ export default function AdminDashboard() {
             const staffData = await staffResponse.json();
             setStaff(staffData.staff || []);
         }
+
+      // Load classes with enrolled students
+      const classesResponse = await fetch('/api/admin/classes');
+      if (classesResponse.ok) {
+        const classesData = await classesResponse.json();
+        setClasses(classesData.classes || []);
+      }
+
+      // Load payments
+      const paymentsResponse = await fetch('/api/admin/payments');
+      if (paymentsResponse.ok) {
+        const paymentsData = await paymentsResponse.json();
+        setPayments(paymentsData.payments || []);
+        setPaymentSummary(paymentsData.summary || null);
+      }
 
     } catch (error) {
       console.error('Error loading data:', error);
@@ -434,128 +511,160 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen" style={{background: 'var(--gray-50)'}}>
-      {/* Header */}
-      <header className="glass sticky top-0 z-50" style={{background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)'}}>
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Navigation */}
+      <MobileNavigation user={user} onLogout={handleLogout} />
+
+      {/* Desktop Navigation */}
+      <nav className="bg-white shadow-md border-b border-gray-200 desktop-nav hidden lg:block">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">CGC</span>
+              </div>
+              <span className="text-xl font-bold text-gray-900">
                 Cruces Gymnastics Center
-              </Link>
-              <span 
-                className="ml-6 px-4 py-2 text-sm font-semibold rounded-xl text-white"
-                style={{
-                  background: 'var(--secondary-600)',
-                  boxShadow: 'var(--shadow-md)'
-                }}
+              </span>
+            </Link>
+
+            {/* Desktop Menu */}
+            <div className="hidden lg:flex items-center space-x-8">
+              <Link
+                href="/"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
               >
+                Home
+              </Link>
+              <Link
+                href="/contact"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+              >
+                Contact
+              </Link>
+              <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
                 Admin
               </span>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-300 font-medium">Welcome, {user?.first_name}</span>
+
+            {/* User & Actions */}
+            <div className="hidden lg:flex items-center space-x-4">
+              <span className="text-sm text-gray-600">Welcome, {user?.first_name}!</span>
+              <Link
+                href="/dashboard"
+                className="text-gray-700 hover:text-red-600 text-sm font-medium transition-colors"
+              >
+                Dashboard
+              </Link>
               <button
                 onClick={handleLogout}
-                className="px-6 py-2.5 rounded-xl font-semibold transition-all duration-300"
-                style={{
-                  background: 'var(--gradient-primary)',
-                  color: 'white',
-                  boxShadow: 'var(--shadow-md)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-                }}
+                className="text-gray-700 hover:text-red-600 text-sm font-medium transition-colors"
               >
-                Logout
+                Sign Out
               </button>
             </div>
           </div>
-        </nav>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Page Title */}
-        <div className="mb-12 animate-fade-in-up">
-          <h1 className="text-5xl font-bold mb-4" style={{color: 'var(--gray-900)'}}>Admin Dashboard</h1>
-          <p className="text-xl" style={{color: 'var(--gray-600)'}}>Manage enrollments, users, and center operations</p>
         </div>
+      </nav>
 
-        {/* Navigation Tabs */}
-        <div className="mb-12">
-          <nav className="flex space-x-8">
-            {[
-              { key: 'overview', label: 'Overview' },
-              { key: 'enrollments', label: 'Enrollments' },
-              { key: 'users', label: 'Users' },
-              { key: 'staff', label: 'Staff' },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
-                className={`pb-3 border-b-2 font-semibold text-lg transition-all duration-300 ${
-                  activeTab === tab.key
-                    ? 'text-red-600'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-                style={{
-                  borderColor: activeTab === tab.key ? 'var(--primary-600)' : 'transparent'
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Admin Dashboard
+            </h1>
+            <p className="text-xl text-red-100 max-w-2xl mx-auto">
+              Manage enrollments, users, staff, and center operations with comprehensive administrative tools.
+            </p>
+          </div>
         </div>
+      </section>
+
+      {/* Admin Content */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          {/* Navigation Tabs */}
+          <div className="mb-12">
+            <nav className="flex space-x-8 overflow-x-auto">
+              {[
+                { key: 'overview', label: 'Overview' },
+                { key: 'enrollments', label: 'Enrollments' },
+                { key: 'users', label: 'Users' },
+                { key: 'staff', label: 'Staff' },
+                { key: 'classes', label: 'Classes' },
+                { key: 'payments', label: 'Payments' },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={`pb-3 border-b-2 font-semibold text-sm lg:text-base transition-colors whitespace-nowrap ${
+                    activeTab === tab.key
+                      ? 'text-red-600 border-red-600'
+                      : 'text-gray-500 hover:text-gray-700 border-transparent'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
 
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-            <div className="card-modern p-8">
-              <h3 className="text-2xl font-semibold mb-3" style={{color: 'var(--gray-900)'}}>Total Enrollments</h3>
-              <p className="text-5xl font-bold" style={{color: 'var(--primary-600)'}}>{enrollments.length}</p>
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-3">Total Enrollments</h3>
+              <p className="text-5xl font-bold text-red-600">{enrollments.length}</p>
             </div>
-            <div className="card-modern p-8">
-              <h3 className="text-2xl font-semibold mb-3" style={{color: 'var(--gray-900)'}}>Active Users</h3>
-              <p className="text-5xl font-bold" style={{color: 'var(--secondary-600)'}}>{users.filter(u => u.is_active).length}</p>
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-3">Active Users</h3>
+              <p className="text-5xl font-bold text-blue-600">{users.filter(u => u.is_active).length}</p>
             </div>
-            <div className="card-modern p-8">
-              <h3 className="text-2xl font-semibold mb-3" style={{color: 'var(--gray-900)'}}>Pending Applications</h3>
-              <p className="text-5xl font-bold" style={{color: 'var(--accent-600)'}}>{enrollments.filter(e => e.status === 'pending').length}</p>
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-3">Pending Applications</h3>
+              <p className="text-5xl font-bold text-yellow-600">{enrollments.filter(e => e.status === 'pending').length}</p>
             </div>
-            <div className="card-modern p-8">
-              <h3 className="text-2xl font-semibold mb-3" style={{color: 'var(--gray-900)'}}>Admin Users</h3>
-              <p className="text-5xl font-bold" style={{color: 'var(--gray-700)'}}>{users.filter(u => u.role === 'admin').length}</p>
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-3">Admin Users</h3>
+              <p className="text-5xl font-bold text-purple-600">{users.filter(u => u.role === 'admin').length}</p>
             </div>
           </div>
         )}
 
         {/* Enrollments Tab */}
         {activeTab === 'enrollments' && (
-          <div className="card-modern overflow-hidden">
-            <div className="px-8 py-6 border-b" style={{borderColor: 'var(--gray-200)'}}>
-              <h2 className="text-3xl font-semibold" style={{color: 'var(--gray-900)'}}>Enrollment Applications</h2>
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="px-8 py-6 border-b border-gray-200">
+              <h2 className="text-2xl font-semibold text-gray-900">Enrollment Applications</h2>
               
               {/* Update Message */}
               {updateMessage && (
                 <div 
-                  className={`mt-6 p-4 rounded-xl ${
+                  className={`mt-6 p-4 rounded-lg ${
                     updateMessage.includes('successfully') 
-                      ? 'border' 
-                      : 'border'
+                      ? 'bg-green-50 border border-green-200 text-green-800' 
+                      : 'bg-red-50 border border-red-200 text-red-800'
                   }`}
-                  style={{
-                    background: updateMessage.includes('successfully') ? 'var(--accent-50)' : 'var(--primary-50)',
-                    color: updateMessage.includes('successfully') ? 'var(--accent-800)' : 'var(--primary-800)',
-                    borderColor: updateMessage.includes('successfully') ? 'var(--accent-200)' : 'var(--primary-200)'
-                  }}
                 >
-                  {updateMessage}
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      {updateMessage.includes('successfully') ? (
+                        <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium">{updateMessage}</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -690,7 +799,9 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          userData.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+                          userData.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
+                          userData.role === 'coach' ? 'bg-blue-100 text-blue-800' : 
+                          'bg-gray-100 text-gray-800'
                         }`}>
                           {userData.role}
                         </span>
@@ -707,19 +818,41 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
-                          {/* Role Toggle Button */}
-                          <button
-                            onClick={() => handleRoleUpdate(
-                              userData.id, 
-                              userData.role === 'admin' ? 'user' : (userData.role === 'user' ? 'coach' : 'admin')
-                            )}
-                            disabled={updateLoading === userData.id}
-                            className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {updateLoading === userData.id ? 'Updating...' : (
-                                userData.role === 'admin' ? 'Demote to User' : (userData.role === 'user' ? 'Promote to Coach' : 'Promote to Admin')
-                            )}
-                          </button>
+                          {/* Role Action Buttons */}
+                          {userData.role === 'admin' ? (
+                            <button
+                              onClick={() => handleRoleUpdate(userData.id, 'user')}
+                              disabled={updateLoading === userData.id}
+                              className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {updateLoading === userData.id ? 'Updating...' : 'Demote to User'}
+                            </button>
+                          ) : userData.role === 'coach' ? (
+                            <>
+                              <button
+                                onClick={() => handleRoleUpdate(userData.id, 'admin')}
+                                disabled={updateLoading === userData.id}
+                                className="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {updateLoading === userData.id ? 'Updating...' : 'Promote to Admin'}
+                              </button>
+                              <button
+                                onClick={() => handleRoleUpdate(userData.id, 'user')}
+                                disabled={updateLoading === userData.id}
+                                className="text-orange-600 hover:text-orange-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {updateLoading === userData.id ? 'Updating...' : 'Demote to User'}
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => handleRoleUpdate(userData.id, 'admin')}
+                              disabled={updateLoading === userData.id}
+                              className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {updateLoading === userData.id ? 'Updating...' : 'Promote to Admin'}
+                            </button>
+                          )}
                           
                           {/* Status Toggle Button */}
                           <button
@@ -810,6 +943,124 @@ export default function AdminDashboard() {
                 </div>
             </div>
         )}
+
+        {/* Classes Tab */}
+        {activeTab === 'classes' && (
+          <div className="space-y-8">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">Class Management</h2>
+                <p className="text-sm text-gray-600 mt-1">View all classes and their enrolled students</p>
+              </div>
+              
+              <div className="p-6">
+                {classes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-gray-500 mb-4">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Classes Found</h3>
+                    <p className="text-gray-500">Add some classes to get started with class management.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {classes.map((classItem) => (
+                      <div key={classItem.id} className="border border-gray-200 rounded-lg p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">{classItem.name}</h3>
+                            <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                              <span className="capitalize">{classItem.day_of_week}</span>
+                              <span>{classItem.start_time} - {classItem.end_time}</span>
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                                {classItem.program_type}
+                              </span>
+                              {classItem.skill_level && (
+                                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                                  {classItem.skill_level}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-gray-600">
+                              <span className="font-medium">{classItem.enrollment_count}</span> / {classItem.capacity} students
+                            </div>
+                            {classItem.monthly_price && (
+                              <div className="text-lg font-semibold text-gray-900">
+                                ${classItem.monthly_price}/month
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {classItem.age_min || classItem.age_max ? (
+                          <div className="text-sm text-gray-600 mb-4">
+                            Age Range: {classItem.age_min ? `${classItem.age_min}+` : 'Any'} 
+                            {classItem.age_max ? ` - ${classItem.age_max}` : ''}
+                          </div>
+                        ) : null}
+
+                        <div className="mt-4">
+                          <h4 className="text-md font-medium text-gray-900 mb-3">
+                            Enrolled Students ({classItem.enrollment_count})
+                          </h4>
+                          
+                          {classItem.enrolled_students.length === 0 ? (
+                            <div className="text-center py-4 bg-gray-50 rounded-lg">
+                              <p className="text-sm text-gray-500">No students enrolled yet</p>
+                            </div>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Student Name
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Parent Email
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Enrollment Date
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                  {classItem.enrolled_students.map((student) => (
+                                    <tr key={student.id}>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        <div className="text-sm font-medium text-gray-900">
+                                          {student.student_name}
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-900">
+                                          {student.parent_email}
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-gray-900">
+                                          {new Date(student.enrollment_date).toLocaleDateString()}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Password Confirmation Modal */}
@@ -857,6 +1108,196 @@ export default function AdminDashboard() {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payments Tab */}
+      {activeTab === 'payments' && (
+        <div className="space-y-8">
+          {/* Payment Summary Cards */}
+          {paymentSummary && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                      <dd className="text-lg font-medium text-gray-900">${paymentSummary.totalRevenue?.toFixed(2) || '0.00'}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Completed</dt>
+                      <dd className="text-lg font-medium text-gray-900">{paymentSummary.completed || 0}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Pending</dt>
+                      <dd className="text-lg font-medium text-gray-900">{paymentSummary.pending || 0}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">Failed</dt>
+                      <dd className="text-lg font-medium text-gray-900">{paymentSummary.failed || 0}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Payments Table */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Payment Management</h2>
+              <p className="text-sm text-gray-600 mt-1">View and manage all payments</p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              {payments.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-500 mb-4">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Payments Found</h3>
+                  <p className="text-gray-500">Payments will appear here once students start making payments.</p>
+                </div>
+              ) : (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {payments.map((payment) => (
+                      <tr key={payment.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {payment.student_first_name && payment.student_last_name 
+                                ? `${payment.student_first_name} ${payment.student_last_name}`
+                                : 'N/A'}
+                            </div>
+                            <div className="text-sm text-gray-500">{payment.parent_email}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">${parseFloat(payment.amount.toString()).toFixed(2)}</div>
+                          {payment.currency && payment.currency !== 'usd' && (
+                            <div className="text-sm text-gray-500 uppercase">{payment.currency}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                            {payment.payment_type.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-900 capitalize">{payment.payment_method}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                            payment.payment_status === 'completed' ? 'bg-green-100 text-green-800' :
+                            payment.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            payment.payment_status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                            payment.payment_status === 'failed' ? 'bg-red-100 text-red-800' :
+                            payment.payment_status === 'refunded' ? 'bg-purple-100 text-purple-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {payment.payment_status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div>{new Date(payment.created_at).toLocaleDateString()}</div>
+                          {payment.paid_date && (
+                            <div className="text-xs text-green-600">Paid: {new Date(payment.paid_date).toLocaleDateString()}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            {payment.receipt_url && (
+                              <a 
+                                href={payment.receipt_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                Receipt
+                              </a>
+                            )}
+                            {payment.payment_status === 'pending' && (
+                              <button className="text-green-600 hover:text-green-900">
+                                Mark Paid
+                              </button>
+                            )}
+                            {payment.payment_status === 'completed' && (
+                              <button className="text-purple-600 hover:text-purple-900">
+                                Refund
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>
@@ -1006,6 +1447,60 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Company Info */}
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">CGC</span>
+                </div>
+                <span className="text-xl font-bold">Cruces Gymnastics Center</span>
+              </div>
+              <p className="text-gray-300 mb-4">
+                Premier gymnastics training in Las Cruces, New Mexico. Building confidence, 
+                character, and champions since 2020.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+              <ul className="space-y-2">
+                <li><Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link></li>
+                <li><Link href="/enroll" className="text-gray-300 hover:text-white transition-colors">Enroll Now</Link></li>
+                <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
+                <li><Link href="/privacy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
+              </ul>
+            </div>
+
+            {/* Contact Info */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
+              <div className="space-y-2 text-gray-300">
+                <p>📍 123 Gymnastics Way<br />Las Cruces, NM 88001</p>
+                <p>📞 (575) XXX-XXXX</p>
+                <p>✉️ info@crucesgymnastics.com</p>
+                <div className="mt-4">
+                  <h4 className="font-semibold text-white mb-2">Hours</h4>
+                  <p className="text-sm">Mon-Fri: 3:00 PM - 8:00 PM</p>
+                  <p className="text-sm">Saturday: 9:00 AM - 5:00 PM</p>
+                  <p className="text-sm">Sunday: 10:00 AM - 4:00 PM</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Cruces Gymnastics Center. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 

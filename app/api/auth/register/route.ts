@@ -6,7 +6,7 @@ import { rateLimit, getSecurityHeaders, sanitizeInput, logSecurityEvent, createA
 // Enhanced validation schema
 const registerSchema = z.object({
   email: z.string().email('Valid email is required').max(100),
-  password: z.string().min(12, 'Password must be at least 12 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
   firstName: z.string().min(1, 'First name is required').max(50),
   lastName: z.string().min(1, 'Last name is required').max(50),
@@ -63,7 +63,9 @@ export async function POST(request: NextRequest) {
 
     const { email, password, firstName, lastName } = validationResult.data;
     
-    // Additional password strength validation
+    // Additional password strength validation removed to match auth-database.ts configuration
+    // NOTE: This maintains consistency with the coach creation system
+    /*
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.valid) {
       return NextResponse.json(
@@ -78,6 +80,7 @@ export async function POST(request: NextRequest) {
         }
       );
     }
+    */
 
     // Sanitize inputs
     const sanitizedData = {

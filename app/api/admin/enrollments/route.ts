@@ -68,6 +68,47 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  const user = await checkAdmin(request);
+  if (!user) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { enrollmentId, action, status } = await request.json();
+    
+    // Handle the frontend format (enrollmentId instead of id)
+    const id = enrollmentId;
+    
+    if (!id || !status) {
+      return NextResponse.json({ success: false, error: 'Missing enrollmentId or status' }, { status: 400 });
+    }
+
+    enrollmentOperations.updateStatus(id, status);
+
+    logSecurityEvent(createAuditLog({
+      action: 'ENROLLMENT_STATUS_UPDATE',
+      resource: `enrollment:${id}`,
+      userId: user.id,
+      details: { status, action },
+      success: true,
+    }));
+
+    return NextResponse.json({ success: true, message: 'Enrollment status updated' });
+  } catch (error) {
+    console.error('Error updating enrollment status:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    logSecurityEvent(createAuditLog({
+      action: 'ENROLLMENT_STATUS_UPDATE_ERROR',
+      resource: 'enrollments',
+      userId: user.id,
+      details: { error: message },
+      success: false,
+    }));
+    return NextResponse.json({ success: false, error: 'Failed to update status' }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   const user = await checkAdmin(request);
   if (!user) {

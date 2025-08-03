@@ -1,144 +1,333 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from "next/link";
+import { Metadata } from 'next';
+import MobileNavigation from '../components/MobileNavigation';
+
+interface User {
+  id: number;
+  email: string;
+  role: string;
+}
 
 export default function TermsOfServicePage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      const result = await response.json();
+
+      if (result.success) {
+        setUser(result.user);
+      }
+    } catch (error) {
+      // User not logged in - that's fine
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header/Navigation */}
-      <header className="bg-gray-900 shadow-md">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-red-600">Cruces Gymnastics Center</Link>
-            </div>
-            <div className="flex space-x-4">
-              <Link href="/login" className="text-gray-300 hover:text-red-500 transition-colors">Login</Link>
-              <Link href="/register" className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                Register
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Navigation */}
+      <MobileNavigation user={user} onLogout={handleLogout} />
+
+      {/* Desktop Navigation */}
+      <nav className="bg-white shadow-md border-b border-gray-200 desktop-nav hidden lg:block">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">CGC</span>
+              </div>
+              <span className="text-xl font-bold text-gray-900">
+                Cruces Gymnastics Center
+              </span>
+            </Link>
+
+            {/* Desktop Menu */}
+            <div className="hidden lg:flex items-center space-x-8">
+              <Link
+                href="/"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+              >
+                Home
+              </Link>
+              <Link
+                href="/contact"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+              >
+                Contact
               </Link>
             </div>
-          </div>
-        </nav>
-      </header>
 
-      {/* Terms of Service Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Terms of Service</h1>
-          
-          <div className="prose max-w-none text-gray-700 space-y-6">
-            <p className="text-sm text-gray-500">Last updated: {new Date().toLocaleDateString()}</p>
-            
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Acceptance of Terms</h2>
-              <p>By enrolling in programs at Cruces Gymnastics Center, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.</p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Program Enrollment</h2>
-              <ul className="list-disc list-inside space-y-2">
-                <li>All enrollments are subject to availability and approval by our staff</li>
-                <li>Students must meet age and skill requirements for their selected program</li>
-                <li>Medical forms and waivers must be completed before participation</li>
-                <li>We reserve the right to move students to more appropriate class levels</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Payment Terms</h2>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Monthly tuition is due on the 1st of each month</li>
-                <li>A late fee of $25 will be applied to payments received after the 10th</li>
-                <li>Registration fees are non-refundable</li>
-                <li>Monthly tuition is non-refundable after the 15th of the month</li>
-                <li>NSF check fee is $35</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Attendance and Make-up Policy</h2>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Regular attendance is important for student progress and safety</li>
-                <li>Make-up classes may be available for excused absences with advance notice</li>
-                <li>No make-ups are provided for unexcused absences</li>
-                <li>Make-up classes must be used within the same month</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Safety and Behavior</h2>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Students must follow all safety rules and instructor directions</li>
-                <li>Appropriate gymnastics attire is required (see dress code)</li>
-                <li>Disruptive behavior may result in removal from class without refund</li>
-                <li>Parents/guardians are responsible for student behavior and safety</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Liability and Risk</h2>
-              <p className="font-semibold text-red-600 mb-3">IMPORTANT: PLEASE READ CAREFULLY</p>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Gymnastics involves inherent risks of injury</li>
-                <li>Participants assume all risks associated with gymnastics activities</li>
-                <li>Cruces Gymnastics Center is not liable for injuries or accidents</li>
-                <li>Participants must have adequate health insurance coverage</li>
-                <li>A signed liability waiver is required for all participants</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Facility Rules</h2>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Parents/guardians must supervise children in lobby areas</li>
-                <li>Food and drinks are not allowed in the gym area</li>
-                <li>No unauthorized use of gymnastics equipment</li>
-                <li>Cell phones should be silenced during classes</li>
-                <li>Photography/videotaping requires permission</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Termination</h2>
-              <p>We reserve the right to terminate services for:</p>
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Non-payment of fees</li>
-                <li>Violation of facility rules or safety policies</li>
-                <li>Disruptive or inappropriate behavior</li>
-                <li>Any reason deemed necessary for the safety and well-being of our community</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Contact Information</h2>
-              <p>Questions about these terms should be directed to:</p>
-              <div className="mt-2">
-                <p>Email: info@crucesgymnastics.com</p>
-                <p>Phone: (575) 123-4567</p>
-                <p>Address: 123 Gymnastics Way, Las Cruces, NM 88001</p>
-              </div>
-            </section>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <Link href="/register" className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
-              Back to Registration
-            </Link>
+            {/* Auth Buttons */}
+            <div className="hidden lg:flex items-center space-x-4">
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-600">Hello, {user.email}</span>
+                  <Link
+                    href="/dashboard"
+                    className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  {user.role === 'admin' && (
+                    <Link
+                      href="/admin"
+                      className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
+                    >
+                      Admin
+                    </Link>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-700 hover:text-red-600 text-sm font-medium"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <Link
+                    href="/login"
+                    className="text-gray-700 hover:text-red-600 text-sm font-medium"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/enroll"
+                    className="bg-red-600 text-white px-6 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Enroll Now
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 mt-auto">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-xl font-bold mb-2 text-red-500">Cruces Gymnastics Center</h2>
-            <p className="text-gray-400 text-sm">Building champions, one flip at a time.</p>
-            <div className="mt-4 text-gray-400 text-xs">
-              <p>&copy; 2025 Cruces Gymnastics Center. All rights reserved.</p>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Terms of Service
+            </h1>
+            <p className="text-xl text-red-100 max-w-2xl mx-auto">
+              Please review our terms and conditions for using Cruces Gymnastics Center services.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Terms Content */}
+      <section className="py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="prose max-w-none text-gray-700 space-y-8">
+              <p className="text-sm text-gray-500">Last updated: {new Date().toLocaleDateString()}</p>
+              
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Acceptance of Terms</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  By enrolling in programs at Cruces Gymnastics Center, you agree to be bound by these Terms of Service. 
+                  If you do not agree to these terms, please do not use our services.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Program Enrollment</h2>
+                <ul className="list-disc list-inside space-y-3 text-gray-700">
+                  <li>All enrollments are subject to availability and approval by our staff</li>
+                  <li>Students must meet age and skill requirements for their selected program</li>
+                  <li>Medical forms and waivers must be completed before participation</li>
+                  <li>We reserve the right to move students to more appropriate class levels</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Payment Terms</h2>
+                <ul className="list-disc list-inside space-y-3 text-gray-700">
+                  <li>Monthly tuition is due on the 1st of each month</li>
+                  <li>A late fee of $25 will be applied to payments received after the 10th</li>
+                  <li>Registration fees are non-refundable</li>
+                  <li>Tuition refunds are only available with 30 days written notice</li>
+                  <li>Payment can be made by credit card, debit card, or electronic bank transfer</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Cancellation Policy</h2>
+                <ul className="list-disc list-inside space-y-3 text-gray-700">
+                  <li>Classes may be cancelled due to low enrollment (minimum 4 students required)</li>
+                  <li>We will provide at least 48 hours notice for class cancellations</li>
+                  <li>Make-up classes will be offered for instructor-cancelled sessions</li>
+                  <li>No make-up classes for student absences due to illness or personal reasons</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Safety and Conduct</h2>
+                <ul className="list-disc list-inside space-y-3 text-gray-700">
+                  <li>Students must follow all safety rules and instructor guidelines</li>
+                  <li>Appropriate athletic wear is required for all classes</li>
+                  <li>Students who display unsafe or disruptive behavior may be removed from class</li>
+                  <li>Parents are responsible for supervising children outside of class time</li>
+                  <li>The facility is not responsible for lost or stolen personal items</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Liability and Waivers</h2>
+                <p className="text-gray-700 leading-relaxed mb-4">
+                  Participation in gymnastics activities involves inherent risks. By enrolling, you acknowledge these risks and agree to:
+                </p>
+                <ul className="list-disc list-inside space-y-3 text-gray-700">
+                  <li>Release Cruces Gymnastics Center from liability for injuries</li>
+                  <li>Assume responsibility for any medical expenses resulting from participation</li>
+                  <li>Provide accurate medical information and emergency contacts</li>
+                  <li>Notify us immediately of any changes to medical conditions</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Photography and Media</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  We may take photographs or videos during classes and events for promotional purposes. 
+                  By enrolling, you consent to the use of your child's image in our marketing materials 
+                  unless you specifically opt out in writing.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Facility Rules</h2>
+                <ul className="list-disc list-inside space-y-3 text-gray-700">
+                  <li>Children must be supervised by a parent or guardian at all times outside of class</li>
+                  <li>Food and drinks are allowed only in designated areas</li>
+                  <li>Street shoes are not permitted in the gym area</li>
+                  <li>Cell phone use is prohibited during classes</li>
+                  <li>Please maintain a respectful and supportive environment for all students</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Changes to Terms</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  We reserve the right to modify these terms at any time. Changes will be posted on our website 
+                  and will take effect immediately. Continued use of our services constitutes acceptance of any changes.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  If you have questions about these Terms of Service, please contact us at:
+                </p>
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <p className="text-gray-700">
+                    <strong>Cruces Gymnastics Center</strong><br />
+                    123 Gymnastics Way<br />
+                    Las Cruces, NM 88001<br />
+                    Phone: (575) XXX-XXXX<br />
+                    Email: info@crucesgymnastics.com
+                  </p>
+                </div>
+              </section>
             </div>
+
+            {/* Navigation Links */}
+            <div className="mt-12 pt-8 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                <Link
+                  href="/privacy"
+                  className="text-red-600 hover:text-red-700 font-medium transition-colors"
+                >
+                  ← View Privacy Policy
+                </Link>
+                <Link
+                  href="/"
+                  className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+                >
+                  Back to Home
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Company Info */}
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">CGC</span>
+                </div>
+                <span className="text-xl font-bold">Cruces Gymnastics Center</span>
+              </div>
+              <p className="text-gray-300 mb-4">
+                Premier gymnastics training in Las Cruces, New Mexico. Building confidence, 
+                character, and champions since 2020.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+              <ul className="space-y-2">
+                <li><Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link></li>
+                <li><Link href="/enroll" className="text-gray-300 hover:text-white transition-colors">Enroll Now</Link></li>
+                <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
+                <li><Link href="/privacy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
+              </ul>
+            </div>
+
+            {/* Contact Info */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
+              <div className="space-y-2 text-gray-300">
+                <p>📍 123 Gymnastics Way<br />Las Cruces, NM 88001</p>
+                <p>📞 (575) XXX-XXXX</p>
+                <p>✉️ info@crucesgymnastics.com</p>
+                <div className="mt-4">
+                  <h4 className="font-semibold text-white mb-2">Hours</h4>
+                  <p className="text-sm">Mon-Fri: 3:00 PM - 8:00 PM</p>
+                  <p className="text-sm">Saturday: 9:00 AM - 5:00 PM</p>
+                  <p className="text-sm">Sunday: 10:00 AM - 4:00 PM</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2024 Cruces Gymnastics Center. All rights reserved.</p>
           </div>
         </div>
       </footer>
     </div>
   );
-} 
+}

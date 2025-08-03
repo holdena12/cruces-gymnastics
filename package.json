@@ -6,10 +6,17 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest --config=jest.config.simple.js",
+    "test:watch": "jest --config=jest.config.simple.js --watch",
+    "test:coverage": "jest --config=jest.config.simple.js --coverage",
+    "test:ci": "jest --config=jest.config.simple.js --ci --coverage --watchAll=false",
+    "test:simple": "jest --config=jest.config.simple.js lib/database-simple.test.ts lib/security.test.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
+    "@stripe/react-stripe-js": "^3.9.0",
+    "@stripe/stripe-js": "^7.8.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/jsonwebtoken": "^9.0.10",
@@ -20,18 +27,23 @@
     "next-auth": "^4.24.11",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "stripe": "^18.4.0",
     "zod": "^4.0.10"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@jest/globals": "^30.0.5",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
+    "jest": "^30.0.5",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "ts-jest": "^29.4.0",
     "typescript": "^5"
   }
 }
