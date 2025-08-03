@@ -64,23 +64,21 @@ export default function PaymentPage() {
 
   const fetchEnrollment = async () => {
     try {
-      // For demo purposes, we'll create a mock enrollment
-      // In production, you'd fetch from your API
-      const mockEnrollment: Enrollment = {
-        id: parseInt(enrollmentId || '1'),
-        student_first_name: 'Emma',
-        student_last_name: 'Wilson',
-        parent_first_name: 'Sarah',
-        parent_last_name: 'Wilson',
-        parent_email: 'sarah.wilson@example.com',
-        program_type: 'girls_recreational',
-        status: 'accepted',
-        submission_date: new Date().toISOString()
-      };
+      // Fetch real enrollment data from API
+      const response = await fetch(`/api/enroll/${enrollmentId}`);
+      if (!response.ok) {
+        throw new Error('Enrollment not found');
+      }
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch enrollment');
+      }
+      const enrollment = result.enrollment;
 
-      setEnrollment(mockEnrollment);
-    } catch (err) {
-      setError('Failed to load enrollment information');
+      setEnrollment(enrollment);
+    } catch (error) {
+      console.error('Error fetching enrollment:', error);
+      setError('Failed to load enrollment details. Please verify the enrollment ID.');
     } finally {
       setLoading(false);
     }
@@ -145,7 +143,7 @@ export default function PaymentPage() {
             <h3 className="mt-4 text-2xl font-bold text-gray-900">Payment Successful!</h3>
             <p className="mt-2 text-gray-600">
               {paymentResult?.mockMode 
-                ? 'Your demo payment has been processed successfully.' 
+                ? 'Your payment has been processed successfully.' 
                 : 'Your payment has been processed and you will receive a receipt via email.'}
             </p>
             

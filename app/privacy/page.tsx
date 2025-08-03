@@ -320,8 +320,8 @@ export default function PrivacyPolicyPage() {
                 <span className="text-xl font-bold">Cruces Gymnastics Center</span>
               </div>
               <p className="text-gray-300 mb-4">
-                Premier gymnastics training in Las Cruces, New Mexico. Building confidence, 
-                character, and champions since 2020.
+                2025 Premier gymnastics training in Las Cruces, New Mexico. Building confidence,
+                character, and champions since 2025.
               </p>
             </div>
 
@@ -355,7 +355,7 @@ export default function PrivacyPolicyPage() {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Cruces Gymnastics Center. All rights reserved.</p>
+            <p>&copy; 2025 Cruces Gymnastics Center. All rights reserved.</p>
           </div>
         </div>
       </footer>

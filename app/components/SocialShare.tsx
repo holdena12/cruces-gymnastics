@@ -83,7 +83,7 @@ export default function SocialShare({
   if (variant === 'compact') {
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
-        <span className="text-sm text-gray-600 mobile-hidden">Share:</span>
+        <span className="text-sm text-white mobile-hidden">Share:</span>
         <div className="flex space-x-1">
           {['facebook', 'twitter', 'whatsapp', 'copy'].map((platform) => (
             <button
@@ -135,7 +135,7 @@ export default function SocialShare({
       <h3 className="text-lg font-semibold text-gray-900">Share This Page</h3>
       
       {/* Native Share API for mobile */}
-      {typeof window !== 'undefined' && navigator.share && (
+      {typeof window !== 'undefined' && typeof navigator !== 'undefined' && navigator.share && (
         <button
           onClick={() => handleShare('native')}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors mobile-block lg:hidden"

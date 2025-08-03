@@ -98,7 +98,7 @@ export default function LoginPage() {
   };
 
   const handleForgotPassword = () => {
-    setForgotPasswordMessage("Please contact us at info@crucesgymnastics.com or (575) XXX-XXXX for password reset assistance.");
+            setForgotPasswordMessage("Please contact us for password reset assistance using the contact information below.");
     setTimeout(() => setForgotPasswordMessage(""), 5000);
   };
 
@@ -358,8 +358,8 @@ export default function LoginPage() {
                 <span className="text-xl font-bold">Cruces Gymnastics Center</span>
               </div>
               <p className="text-gray-300 mb-4">
-                Premier gymnastics training in Las Cruces, New Mexico. Building confidence, 
-                character, and champions since 2020.
+                2025 Premier gymnastics training in Las Cruces, New Mexico. Building confidence,
+                character, and champions since 2025.
               </p>
             </div>
 
@@ -379,9 +379,9 @@ export default function LoginPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
               <div className="space-y-2 text-gray-300">
-                <p>📍 123 Gymnastics Way<br />Las Cruces, NM 88001</p>
-                <p>📞 (575) XXX-XXXX</p>
-                <p>✉️ info@crucesgymnastics.com</p>
+                <p>3200 W. Picacho Ave<br />Las Cruces, NM 88001</p>
+                <p>📞 [PHONE NUMBER NEEDED]</p>
+                <p>✉️ [EMAIL ADDRESS NEEDED]</p>
                 <div className="mt-4">
                   <h4 className="font-semibold text-white mb-2">Hours</h4>
                   <p className="text-sm">Mon-Fri: 3:00 PM - 8:00 PM</p>
@@ -393,7 +393,7 @@ export default function LoginPage() {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Cruces Gymnastics Center. All rights reserved.</p>
+            <p>&copy; 2025 Cruces Gymnastics Center. All rights reserved.</p>
           </div>
         </div>
       </footer>
