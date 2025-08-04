@@ -3,18 +3,26 @@ import path from 'path';
 import fs from 'fs';
 import { encryptSensitiveData, decryptSensitiveData, sanitizeInput, logSecurityEvent, createAuditLog } from './security';
 
-// Create data directory if it doesn't exist
-const dataDir = path.join(process.cwd(), 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+// Database initialization with error handling
+let db: Database.Database | null = null;
+
+try {
+  // Create data directory if it doesn't exist
+  const dataDir = path.join(process.cwd(), 'data');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+
+  // Create database file
+  const dbPath = path.join(dataDir, 'enrollment.db');
+  db = new Database(dbPath);
+
+  // Enable foreign keys
+  db.pragma('foreign_keys = ON');
+} catch (error) {
+  console.error('Database initialization failed:', error);
+  // Continue without database for build environments
 }
-
-// Create database file
-const dbPath = path.join(dataDir, 'enrollment.db');
-const db = new Database(dbPath);
-
-// Enable foreign keys
-db.pragma('foreign_keys = ON');
 
 // Create enrollments table
 const createEnrollmentsTable = db.prepare(`

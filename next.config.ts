@@ -3,11 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   
-  // Ensure SQLite databases work in production
-  serverExternalPackages: ['better-sqlite3'],
-  
-  // Remove standalone output for Amplify compatibility
-  
   // Environment variables that should be available at build time
   env: {
     NODE_ENV: process.env.NODE_ENV,
@@ -15,6 +10,11 @@ const nextConfig: NextConfig = {
   
   // Disable telemetry for faster builds
   telemetry: false,
+  
+  // Handle native modules in serverless environment
+  experimental: {
+    serverComponentsExternalPackages: ['better-sqlite3']
+  }
 };
 
 export default nextConfig;
