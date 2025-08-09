@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { z } from 'zod';
-import { paymentOperations, enrollmentOperations } from '@/lib/database';
-import { authOperations } from '@/lib/auth-database';
+import { paymentOperations, enrollmentOperations } from '@/lib/dynamodb-data';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
 import { getSecurityHeaders, rateLimit, sanitizeInput, logSecurityEvent, createAuditLog } from '@/lib/security';
 
-// Initialize Stripe (safe with test keys)
-const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-07-30.basil',
-}) : null;
+// Helper to create Stripe client only when payments are enabled
+async function getStripe() {
+  const { default: Stripe } = await import('stripe');
+  return new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: '2025-07-30.basil' });
+}
 
 // Payment creation schema
 const createPaymentSchema = z.object({
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     const validatedData = createPaymentSchema.parse(body);
 
     // Get enrollment details
-    const enrollment = enrollmentOperations.getById(validatedData.enrollmentId);
+    const enrollment = await enrollmentOperations.getById(validatedData.enrollmentId);
     if (!enrollment) {
       return NextResponse.json(
         { success: false, error: 'Enrollment not found' },
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     
     if (!paymentsEnabled) {
       // Mock payment for testing
-      const mockPayment = paymentOperations.create({
+      const mockPayment = await paymentOperations.create({
         student_id: null,
         enrollment_id: validatedData.enrollmentId,
         amount: validatedData.amount,
@@ -123,12 +123,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Real Stripe payment intent creation
-    if (!stripe) {
-      return NextResponse.json(
-        { success: false, error: 'Payment system not configured' },
-        { status: 500, headers: getSecurityHeaders() }
-      );
-    }
+    const stripe = await getStripe();
 
     // Create Stripe customer if needed
     let customerId = null;
@@ -173,7 +168,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Save payment record to database
-    const payment = paymentOperations.create({
+    const payment = await paymentOperations.create({
       student_id: null,
       enrollment_id: validatedData.enrollmentId,
       amount: validatedData.amount,
@@ -224,7 +219,7 @@ export async function POST(request: NextRequest) {
         { 
           success: false, 
           error: 'Invalid payment data',
-          details: error.errors 
+          details: (error as any).issues || [] 
         },
         { status: 400, headers: getSecurityHeaders() }
       );
@@ -252,7 +247,7 @@ export async function PATCH(request: NextRequest) {
     const validatedData = confirmPaymentSchema.parse(body);
 
     // Find payment in database
-    const payment = paymentOperations.getByStripePaymentIntentId(validatedData.paymentIntentId);
+    const payment = await paymentOperations.getByStripePaymentIntentId(validatedData.paymentIntentId);
     if (!payment) {
       return NextResponse.json(
         { success: false, error: 'Payment not found' },
@@ -263,7 +258,7 @@ export async function PATCH(request: NextRequest) {
     // Check if this is a mock payment
     if (validatedData.paymentIntentId.startsWith('mock_pi_')) {
       // Simulate successful payment
-      paymentOperations.updateStatus(payment.id, 'completed', {
+      await paymentOperations.updateStatus(payment.id, 'completed', {
         paid_date: new Date().toISOString(),
         receipt_url: `${process.env.NEXTAUTH_URL}/receipts/mock_${payment.id}`
       });
@@ -283,18 +278,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Verify payment with Stripe
-    if (!stripe) {
-      return NextResponse.json(
-        { success: false, error: 'Payment system not configured' },
-        { status: 500, headers: getSecurityHeaders() }
-      );
-    }
-
+    const stripe = await getStripe();
     const paymentIntent = await stripe.paymentIntents.retrieve(validatedData.paymentIntentId);
     
     if (paymentIntent.status === 'succeeded') {
       // Update payment status
-      paymentOperations.updateStatus(payment.id, 'completed', {
+      await paymentOperations.updateStatus(payment.id, 'completed', {
         paid_date: new Date(paymentIntent.created * 1000).toISOString(),
         stripe_payment_method_id: validatedData.paymentMethodId,
         receipt_url: paymentIntent.receipt_email ? `https://dashboard.stripe.com/receipts/${paymentIntent.charges.data[0]?.receipt_url}` : null
@@ -317,7 +306,7 @@ export async function PATCH(request: NextRequest) {
       }, { headers: getSecurityHeaders() });
     } else {
       // Update payment with failure info
-      paymentOperations.updateStatus(payment.id, 'failed', {
+      await paymentOperations.updateStatus(payment.id, 'failed', {
         failure_reason: `Payment status: ${paymentIntent.status}`
       });
 
@@ -360,10 +349,10 @@ export async function GET(request: NextRequest) {
 
     let payments;
     if (paymentId) {
-      const payment = paymentOperations.getById(parseInt(paymentId));
+      const payment = await paymentOperations.getById(parseInt(paymentId));
       payments = payment ? [payment] : [];
     } else if (enrollmentId) {
-      payments = paymentOperations.getByEnrollmentId(parseInt(enrollmentId));
+      payments = await paymentOperations.getByEnrollmentId(parseInt(enrollmentId));
     }
 
     return NextResponse.json({

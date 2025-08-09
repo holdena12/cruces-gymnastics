@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enrollmentOperations } from '@/lib/database';
-import { authOperations } from '@/lib/auth-database';
+import { enrollmentOperations } from '@/lib/dynamodb-data';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
 import { logSecurityEvent, createAuditLog } from '@/lib/security';
 
 // Helper to check for admin privileges
@@ -9,7 +9,7 @@ async function checkAdmin(request: NextRequest) {
   if (!token) {
     return null;
   }
-  const { valid, user } = authOperations.verifyToken(token);
+  const { valid, user } = await authOperations.verifyToken(token);
   if (valid && user?.role === 'admin') {
     return user;
   }
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const enrollments = enrollmentOperations.getAll();
+    const enrollments = await enrollmentOperations.getAll();
     return NextResponse.json({ success: true, enrollments });
   } catch (error) {
     console.error('Error fetching enrollments:', error);
@@ -43,12 +43,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing id or status' }, { status: 400 });
     }
 
-    enrollmentOperations.updateStatus(id, status);
+    await enrollmentOperations.updateStatus(id, status);
 
     logSecurityEvent(createAuditLog({
       action: 'ENROLLMENT_STATUS_UPDATE',
       resource: `enrollment:${id}`,
-      userId: user.id,
+      userId: Number(user.id),
       details: { status },
       success: true,
     }));
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     logSecurityEvent(createAuditLog({
       action: 'ENROLLMENT_STATUS_UPDATE_ERROR',
       resource: 'enrollments',
-      userId: user.id,
+      userId: Number(user.id),
       details: { error: message },
       success: false,
     }));
@@ -78,18 +78,18 @@ export async function PATCH(request: NextRequest) {
     const { enrollmentId, action, status } = await request.json();
     
     // Handle the frontend format (enrollmentId instead of id)
-    const id = enrollmentId;
+    const id = Number(enrollmentId);
     
     if (!id || !status) {
       return NextResponse.json({ success: false, error: 'Missing enrollmentId or status' }, { status: 400 });
     }
 
-    enrollmentOperations.updateStatus(id, status);
+    await enrollmentOperations.updateStatus(id, status);
 
     logSecurityEvent(createAuditLog({
       action: 'ENROLLMENT_STATUS_UPDATE',
       resource: `enrollment:${id}`,
-      userId: user.id,
+      userId: Number(user.id),
       details: { status, action },
       success: true,
     }));
@@ -101,7 +101,7 @@ export async function PATCH(request: NextRequest) {
     logSecurityEvent(createAuditLog({
       action: 'ENROLLMENT_STATUS_UPDATE_ERROR',
       resource: 'enrollments',
-      userId: user.id,
+      userId: Number(user.id),
       details: { error: message },
       success: false,
     }));
@@ -121,7 +121,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Enrollment ID is required' }, { status: 400 });
     }
 
-    const result = enrollmentOperations.delete(id);
+    const result = await enrollmentOperations.delete(Number(id));
 
     if (result.changes === 0) {
       return NextResponse.json({ success: false, error: 'Enrollment not found or already deleted' }, { status: 404 });
@@ -130,7 +130,7 @@ export async function DELETE(request: NextRequest) {
     logSecurityEvent(createAuditLog({
       action: 'ENROLLMENT_DELETE',
       resource: `enrollment:${id}`,
-      userId: user.id,
+      userId: Number(user.id),
       details: { enrollmentId: id },
       success: true,
     }));
@@ -142,7 +142,7 @@ export async function DELETE(request: NextRequest) {
     logSecurityEvent(createAuditLog({
       action: 'ENROLLMENT_DELETE_ERROR',
       resource: 'enrollments',
-      userId: user.id,
+      userId: Number(user.id),
       details: { error: message },
       success: false,
     }));

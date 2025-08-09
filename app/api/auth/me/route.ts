@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authOperations } from '@/lib/auth-database';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify token and get user
-    const result = authOperations.verifyToken(token);
+    const result = await authOperations.verifyToken(token);
 
     if (!result.valid) {
       return NextResponse.json(

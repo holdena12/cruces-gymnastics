@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authOperations } from '@/lib/auth-database';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verify user
-    const authResult = authOperations.verifyToken(token);
+    const authResult = await authOperations.verifyToken(token);
     if (!authResult.valid) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const user = authResult.user;
+    const user = authResult.user!;
     const body = await request.json();
     
     // Basic validation
@@ -34,9 +34,9 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update user profile
-    const updateResult = authOperations.updateUserProfile(user.id, {
-      first_name: body.firstName.trim(),
-      last_name: body.lastName.trim(),
+    const updateResult = await authOperations.updateUserProfile(user.id, {
+      firstName: body.firstName.trim(),
+      lastName: body.lastName.trim(),
       email: body.email.toLowerCase().trim()
     });
 
@@ -48,7 +48,8 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get updated user data
-    const updatedUser = authOperations.getUserById(user.id);
+    const verifyAgain = await authOperations.verifyToken(token);
+    const updatedUser = verifyAgain.valid ? verifyAgain.user : user;
 
     return NextResponse.json({
       success: true,

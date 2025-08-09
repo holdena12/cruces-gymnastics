@@ -94,12 +94,13 @@ export const dynamoOperations = {
   },
 
   // Update item
-  update: async (pk: string, sk: string, updateExpression: string, expressionValues: Record<string, any>) => {
+  update: async (pk: string, sk: string, updateExpression: string, expressionValues: Record<string, any>, expressionNames?: Record<string, string>) => {
     const command = new UpdateCommand({
       TableName,
       Key: { PK: pk, SK: sk },
       UpdateExpression: updateExpression,
       ExpressionAttributeValues: expressionValues,
+      ...(expressionNames && { ExpressionAttributeNames: expressionNames }),
       ReturnValues: 'ALL_NEW',
     });
     

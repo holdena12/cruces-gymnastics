@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { enrollmentOperations, EnrollmentData } from '@/lib/database';
+import { enrollmentOperations, EnrollmentData } from '@/lib/dynamodb-data';
 import { rateLimit, getSecurityHeaders, sanitizeInput as sanitizeSecurityInput, logSecurityEvent, createAuditLog } from '@/lib/security';
 
 // Validation schema using Zod
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
 
     // Check for duplicate enrollment (same student + email combination)
     console.log('Checking for duplicate enrollment...');
-    const existingEnrollments = enrollmentOperations.getByEmail(sanitizedData.parent_email);
+    const existingEnrollments = await enrollmentOperations.getByEmail(sanitizedData.parent_email);
     
     // Check if this specific student is already enrolled
     const duplicateStudent = existingEnrollments.find((enrollment: any) => 
@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
 
     // Save to database
     console.log('Creating enrollment in database...');
-    const result = enrollmentOperations.create(sanitizedData);
+    const result = await enrollmentOperations.create(sanitizedData);
     
     if (result.changes === 1) {
       console.log('New enrollment submitted:', {
@@ -283,7 +283,7 @@ export async function GET(request: NextRequest) {
     const id = url.searchParams.get('id');
 
     if (id) {
-      const enrollment = enrollmentOperations.getById(parseInt(id));
+      const enrollment = await enrollmentOperations.getById(parseInt(id));
       if (!enrollment) {
         return NextResponse.json(
           { success: false, error: 'Enrollment not found' },
@@ -292,7 +292,7 @@ export async function GET(request: NextRequest) {
       }
       return NextResponse.json({ success: true, data: enrollment });
     } else {
-      const enrollments = enrollmentOperations.getAll();
+      const enrollments = await enrollmentOperations.getAll();
       return NextResponse.json({ 
         success: true, 
         enrollments: enrollments.map((enrollment: any) => ({

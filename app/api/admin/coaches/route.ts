@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authOperations } from '@/lib/auth-database';
-import { staffOperations } from '@/lib/database';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
+import { staffOperations } from '@/lib/dynamodb-data';
 
 export async function POST(req: NextRequest) {
   console.log('--- Add Coach API Route ---');
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const tokenVerification = authOperations.verifyToken(token);
+  const tokenVerification = await authOperations.verifyToken(token);
   console.log('Token verification result:', { 
     valid: tokenVerification.valid, 
     user: tokenVerification.user,
@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
     const { success, user, error } = await authOperations.createUser({
       email,
       password,
-      first_name: firstName,
-      last_name: lastName,
+      firstName,
+      lastName,
       role: 'coach',
     });
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       bio,
     };
 
-    staffOperations.create(staffData);
+    await staffOperations.create(staffData);
 
     return NextResponse.json({ success: true, message: 'Coach created successfully' });
   } catch (error) {

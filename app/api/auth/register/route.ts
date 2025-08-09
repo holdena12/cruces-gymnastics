@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authOperations } from '@/lib/auth-database';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
 import { rateLimit, getSecurityHeaders, sanitizeInput, logSecurityEvent, createAuditLog, validatePasswordStrength } from '@/lib/security';
 
 // Enhanced validation schema
@@ -86,8 +86,8 @@ export async function POST(request: NextRequest) {
     const sanitizedData = {
       email: sanitizeInput(email.toLowerCase().trim()),
       password: password, // Don't sanitize password
-      first_name: sanitizeInput(firstName),
-      last_name: sanitizeInput(lastName),
+      firstName: sanitizeInput(firstName),
+      lastName: sanitizeInput(lastName),
       role: 'user' as const // Default role for registration
     };
 

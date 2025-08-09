@@ -3,13 +3,13 @@ import { NextRequest } from 'next/server';
 import { GET, PATCH, DELETE } from './route';
 
 // Mock dependencies
-jest.mock('@/lib/auth-database');
+jest.mock('@/lib/dynamodb-auth');
 jest.mock('@/lib/database');
 jest.mock('@/lib/security');
 
 // Import mocked modules
-import { authOperations } from '@/lib/auth-database';
-import { enrollmentOperations } from '@/lib/database';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
+import { enrollmentOperations } from '@/lib/dynamodb-data';
 import { getSecurityHeaders } from '@/lib/security';
 
 // Type the mocked modules

@@ -7,7 +7,7 @@ jest.mock('@/lib/database');
 jest.mock('@/lib/security');
 
 // Import mocked modules
-import { enrollmentOperations } from '@/lib/database';
+import { enrollmentOperations } from '@/lib/dynamodb-data';
 import { rateLimit, sanitizeInput, getSecurityHeaders } from '@/lib/security';
 
 // Type the mocked modules

@@ -213,9 +213,9 @@ export const dynamoAuthOperations = {
         return [];
       }
 
-      return result.items
-        .filter(item => item.SK?.startsWith('PROFILE#'))
-        .map(item => ({
+      return (result.items as any[])
+        .filter((item: any) => item.SK?.startsWith('PROFILE#'))
+        .map((item: any) => ({
           id: item.email,
           email: item.email,
           firstName: item.firstName,
@@ -238,7 +238,8 @@ export const dynamoAuthOperations = {
         `USER#${userId}`,
         `PROFILE#${userId}`,
         'SET #role = :role',
-        { '#role': 'role', ':role': role }
+        { ':role': role },
+        { '#role': 'role' }
       );
 
       if (result.success) {
@@ -254,6 +255,51 @@ export const dynamoAuthOperations = {
     } catch (error) {
       console.error('Update user role error:', error);
       return false;
+    }
+  },
+
+  // Update user profile (firstName, lastName, email)
+  updateUserProfile: async (userId: string, data: { firstName: string; lastName: string; email: string }) => {
+    try {
+      const currentPk = `USER#${userId}`;
+      const currentSk = `PROFILE#${userId}`;
+
+      // If email is changing, we need to create a new item and optionally delete the old one.
+      if (userId !== data.email) {
+        // Get existing user
+        const existing = await dynamoOperations.get(currentPk, currentSk);
+        if (!existing.success || !existing.item) return { success: false, error: 'User not found' };
+
+        const updated = {
+          ...(existing.item as any),
+          PK: `USER#${data.email}`,
+          SK: `PROFILE#${data.email}`,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+        } as UserItem;
+
+        const putRes = await dynamoOperations.put(updated);
+        if (!putRes.success) return { success: false, error: 'Failed to update user' };
+
+        // Delete old record
+        await dynamoOperations.delete(currentPk, currentSk);
+        return { success: true };
+      }
+
+      // Email unchanged; simple update
+      const res = await dynamoOperations.update(
+        currentPk,
+        currentSk,
+        'SET #firstName = :firstName, #lastName = :lastName',
+        { ':firstName': data.firstName, ':lastName': data.lastName },
+        { '#firstName': 'firstName', '#lastName': 'lastName' }
+      );
+
+      return { success: res.success, error: res.success ? undefined : 'Failed to update user' };
+    } catch (error) {
+      console.error('Update user profile error:', error);
+      return { success: false, error: 'Internal error' };
     }
   },
 

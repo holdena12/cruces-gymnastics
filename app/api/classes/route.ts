@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authOperations } from '@/lib/auth-database';
-import { classOperations } from '@/lib/database';
+import { classOperations } from '@/lib/dynamodb-data';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
 
 // Helper function to verify admin
 async function verifyAdmin(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value;
   if (!token) return null;
   
-  const authResult = authOperations.verifyToken(token);
-  if (!authResult.valid || authResult.user.role !== 'admin') return null;
+  const authResult = await authOperations.verifyToken(token);
+  if (!authResult.valid || !authResult.user || authResult.user.role !== 'admin') return null;
 
   return authResult.user;
 }
@@ -21,11 +21,11 @@ export async function GET(request: NextRequest) {
 
     let classes;
     if (id) {
-      classes = classOperations.getById(parseInt(id));
+      classes = await classOperations.getById(parseInt(id));
     } else if (day) {
-      classes = classOperations.getByDay(day);
+      classes = await classOperations.getByDay(day);
     } else {
-      classes = classOperations.getAll();
+      classes = await classOperations.getAll();
     }
 
     return NextResponse.json({ success: true, classes });
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = classOperations.create({
+    const result = await classOperations.create({
       name,
       program_type,
       instructor_id: instructor_id || null,
@@ -90,8 +90,8 @@ export async function PATCH(request: NextRequest) {
 
     if (action === 'enroll') {
       // Check capacity before enrolling
-      const currentCount = classOperations.getEnrollmentCount(classId);
-      const classInfo = classOperations.getById(classId) as any;
+      const currentCount = await classOperations.getEnrollmentCount(classId);
+      const classInfo = await classOperations.getById(classId) as any;
       
       if (classInfo && currentCount >= classInfo.capacity) {
         return NextResponse.json(
@@ -100,7 +100,7 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
-      const result = classOperations.enrollStudent(studentId, classId);
+      await classOperations.enrollStudent(studentId, classId);
       return NextResponse.json({
         success: true,
         message: 'Student enrolled in class successfully'

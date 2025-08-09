@@ -1,25 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import { paymentOperations } from '@/lib/database';
+import { paymentOperations } from '@/lib/dynamodb-data';
 import { logSecurityEvent, createAuditLog, getSecurityHeaders } from '@/lib/security';
 
-const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-07-30.basil',
-}) : null;
+async function getStripe() {
+  const { default: Stripe } = await import('stripe');
+  return new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: '2025-07-30.basil' });
+}
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function POST(request: NextRequest) {
   try {
-    if (!stripe || !webhookSecret) {
+    if (!process.env.STRIPE_SECRET_KEY || !webhookSecret) {
       console.log('Stripe webhook received but Stripe not configured - ignoring');
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
+    const stripe = await getStripe();
     const body = await request.text();
     const signature = request.headers.get('stripe-signature') as string;
 
-    let event: Stripe.Event;
+    let event: any;
 
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
@@ -42,35 +43,35 @@ export async function POST(request: NextRequest) {
     // Handle the event
     switch (event.type) {
       case 'payment_intent.succeeded':
-        await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+        await handlePaymentIntentSucceeded(event.data.object as any);
         break;
       
       case 'payment_intent.payment_failed':
-        await handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+        await handlePaymentIntentFailed(event.data.object as any);
         break;
       
       case 'payment_intent.canceled':
-        await handlePaymentIntentCanceled(event.data.object as Stripe.PaymentIntent);
+        await handlePaymentIntentCanceled(event.data.object as any);
         break;
       
       case 'payment_intent.processing':
-        await handlePaymentIntentProcessing(event.data.object as Stripe.PaymentIntent);
+        await handlePaymentIntentProcessing(event.data.object as any);
         break;
       
       case 'charge.dispute.created':
-        await handleChargeDisputeCreated(event.data.object as Stripe.Dispute);
+        await handleChargeDisputeCreated(event.data.object as any);
         break;
       
       case 'customer.created':
-        await handleCustomerCreated(event.data.object as Stripe.Customer);
+        await handleCustomerCreated(event.data.object as any);
         break;
       
       case 'invoice.payment_succeeded':
-        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+        await handleInvoicePaymentSucceeded(event.data.object as any);
         break;
       
       case 'invoice.payment_failed':
-        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        await handleInvoicePaymentFailed(event.data.object as any);
         break;
       
       default:
@@ -94,9 +95,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+async function handlePaymentIntentSucceeded(paymentIntent: any) {
   try {
-    const payment = paymentOperations.getByStripePaymentIntentId(paymentIntent.id);
+    const payment = await paymentOperations.getByStripePaymentIntentId(paymentIntent.id);
     if (!payment) {
       console.error(`Payment not found for PaymentIntent: ${paymentIntent.id}`);
       return;
@@ -107,7 +108,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     const charge = charges[0];
     const receiptUrl = charge?.receipt_url || null;
 
-    paymentOperations.updateStatus(payment.id, 'completed', {
+    await paymentOperations.updateStatus(payment.id, 'completed', {
       paid_date: new Date(paymentIntent.created * 1000).toISOString(),
       receipt_url: receiptUrl,
       stripe_payment_method_id: paymentIntent.payment_method as string,
@@ -131,9 +132,9 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   }
 }
 
-async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
+async function handlePaymentIntentFailed(paymentIntent: any) {
   try {
-    const payment = paymentOperations.getByStripePaymentIntentId(paymentIntent.id);
+    const payment = await paymentOperations.getByStripePaymentIntentId(paymentIntent.id);
     if (!payment) {
       console.error(`Payment not found for PaymentIntent: ${paymentIntent.id}`);
       return;
@@ -144,7 +145,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
       ? `${lastPaymentError.type}: ${lastPaymentError.message}` 
       : 'Payment failed';
 
-    paymentOperations.updateStatus(payment.id, 'failed', {
+    await paymentOperations.updateStatus(payment.id, 'failed', {
       failure_reason: failureReason
     });
 
@@ -165,15 +166,15 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   }
 }
 
-async function handlePaymentIntentCanceled(paymentIntent: Stripe.PaymentIntent) {
+async function handlePaymentIntentCanceled(paymentIntent: any) {
   try {
-    const payment = paymentOperations.getByStripePaymentIntentId(paymentIntent.id);
+    const payment = await paymentOperations.getByStripePaymentIntentId(paymentIntent.id);
     if (!payment) {
       console.error(`Payment not found for PaymentIntent: ${paymentIntent.id}`);
       return;
     }
 
-    paymentOperations.updateStatus(payment.id, 'cancelled', {
+    await paymentOperations.updateStatus(payment.id, 'cancelled', {
       failure_reason: 'Payment canceled'
     });
 
@@ -193,15 +194,15 @@ async function handlePaymentIntentCanceled(paymentIntent: Stripe.PaymentIntent) 
   }
 }
 
-async function handlePaymentIntentProcessing(paymentIntent: Stripe.PaymentIntent) {
+async function handlePaymentIntentProcessing(paymentIntent: any) {
   try {
-    const payment = paymentOperations.getByStripePaymentIntentId(paymentIntent.id);
+    const payment = await paymentOperations.getByStripePaymentIntentId(paymentIntent.id);
     if (!payment) {
       console.error(`Payment not found for PaymentIntent: ${paymentIntent.id}`);
       return;
     }
 
-    paymentOperations.updateStatus(payment.id, 'processing');
+    await paymentOperations.updateStatus(payment.id, 'processing');
 
     console.log(`Payment ${payment.id} marked as processing via webhook`);
   } catch (error) {
@@ -209,7 +210,7 @@ async function handlePaymentIntentProcessing(paymentIntent: Stripe.PaymentIntent
   }
 }
 
-async function handleChargeDisputeCreated(dispute: Stripe.Dispute) {
+async function handleChargeDisputeCreated(dispute: any) {
   try {
     // Find payment by charge ID
     const chargeId = dispute.charge as string;
@@ -236,7 +237,7 @@ async function handleChargeDisputeCreated(dispute: Stripe.Dispute) {
   }
 }
 
-async function handleCustomerCreated(customer: Stripe.Customer) {
+async function handleCustomerCreated(customer: any) {
   try {
     logSecurityEvent(createAuditLog({
       action: 'STRIPE_CUSTOMER_CREATED',
@@ -254,7 +255,7 @@ async function handleCustomerCreated(customer: Stripe.Customer) {
   }
 }
 
-async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+async function handleInvoicePaymentSucceeded(invoice: any) {
   try {
     // Handle subscription/recurring payments
     logSecurityEvent(createAuditLog({
@@ -276,7 +277,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   }
 }
 
-async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+async function handleInvoicePaymentFailed(invoice: any) {
   try {
     logSecurityEvent(createAuditLog({
       action: 'INVOICE_PAYMENT_FAILED',

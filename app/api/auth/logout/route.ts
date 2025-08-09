@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authOperations } from '@/lib/auth-database';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
 
     if (token) {
       // Invalidate session in database
-      authOperations.logout(token);
+      await authOperations.logout(token);
     }
 
     // Create response

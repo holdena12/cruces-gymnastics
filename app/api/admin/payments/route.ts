@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { paymentOperations } from '@/lib/database';
-import { authOperations } from '@/lib/auth-database';
+import { paymentOperations } from '@/lib/dynamodb-data';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
 import { getSecurityHeaders, rateLimit, logSecurityEvent, createAuditLog } from '@/lib/security';
 
 // Helper function to check if user is admin
@@ -13,13 +13,12 @@ async function checkAdmin(request: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1];
-    const user = await authOperations.verifyToken(token);
-    
-    if (!user || user.role !== 'admin') {
-      return { isAdmin: false, user };
+    const verify = await authOperations.verifyToken(token);
+    if (!verify.valid || !verify.user || verify.user.role !== 'admin') {
+      return { isAdmin: false, user: verify.user };
     }
 
-    return { isAdmin: true, user };
+    return { isAdmin: true, user: verify.user };
   } catch (error) {
     console.error('Admin check error:', error);
     return { isAdmin: false, user: null };
@@ -59,52 +58,37 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const paymentType = searchParams.get('paymentType');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
     const limit = parseInt(searchParams.get('limit') || '100');
 
-    // Get payments based on filters
-    let payments;
-    if (startDate && endDate) {
-      // Get revenue report if date range provided
-      const report = paymentOperations.getRevenueReport(startDate, endDate);
-      return NextResponse.json({
-        success: true,
-        report: report,
-        summary: {
-          totalRevenue: report.reduce((sum, item) => sum + item.total_amount, 0),
-          totalTransactions: report.reduce((sum, item) => sum + item.transaction_count, 0)
-        }
-      }, { headers: getSecurityHeaders() });
-    } else {
-      // Get all payments with optional filters
-      payments = paymentOperations.getAll();
-      
-      // Apply filters
-      if (status) {
-        payments = payments.filter((p: any) => p.payment_status === status);
-      }
-      if (paymentType) {
-        payments = payments.filter((p: any) => p.payment_type === paymentType);
-      }
-
-      // Limit results
-      payments = payments.slice(0, limit);
+    // Get all payments with optional filters
+    let payments: any[] = [];
+    const all = await (async () => {
+      // No bulk list by default; scan all
+      const result = await (await import('@/lib/dynamodb-client')).dynamoOperations.scan('begins_with(PK, :pk)', { ':pk': 'PAYMENT#' });
+      return result.items || [];
+    })();
+    payments = all as any[];
+    if (status) {
+      payments = payments.filter((p: any) => p.status === status);
     }
+    if (paymentType) {
+      payments = payments.filter((p: any) => p.paymentType === paymentType);
+    }
+    payments = payments.slice(0, limit);
 
-    // Get summary statistics
-    const allPayments = paymentOperations.getAll();
+    // Get summary statistics (approx from same list)
+    const allPayments = payments;
     const summary = {
       total: allPayments.length,
-      completed: allPayments.filter((p: any) => p.payment_status === 'completed').length,
-      pending: allPayments.filter((p: any) => p.payment_status === 'pending').length,
-      failed: allPayments.filter((p: any) => p.payment_status === 'failed').length,
+      completed: allPayments.filter((p: any) => p.status === 'completed').length,
+      pending: allPayments.filter((p: any) => p.status === 'pending').length,
+      failed: allPayments.filter((p: any) => p.status === 'failed').length,
       totalRevenue: allPayments
-        .filter((p: any) => p.payment_status === 'completed')
-        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0),
+        .filter((p: any) => p.status === 'completed')
+        .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0),
       recentPayments: allPayments
         .filter((p: any) => {
-          const paymentDate = new Date(p.created_at);
+          const paymentDate = new Date(p.createdAt || 0);
           const lastWeek = new Date();
           lastWeek.setDate(lastWeek.getDate() - 7);
           return paymentDate >= lastWeek;
@@ -176,7 +160,7 @@ export async function POST(request: NextRequest) {
     const validatedData = createPaymentSchema.parse(body);
 
     // Create payment record
-    const payment = paymentOperations.create({
+    const payment = await paymentOperations.create({
       student_id: null,
       enrollment_id: validatedData.enrollmentId,
       amount: validatedData.amount,
@@ -226,7 +210,7 @@ export async function POST(request: NextRequest) {
         { 
           success: false, 
           error: 'Invalid payment data',
-          details: error.errors 
+          details: (error as any).issues || [] 
         },
         { status: 400, headers: getSecurityHeaders() }
       );
@@ -269,7 +253,7 @@ export async function PATCH(request: NextRequest) {
     const validatedData = updatePaymentSchema.parse(body);
 
     // Check if payment exists
-    const existingPayment = paymentOperations.getById(validatedData.id);
+    const existingPayment = await paymentOperations.getById(validatedData.id);
     if (!existingPayment) {
       return NextResponse.json(
         { success: false, error: 'Payment not found' },
@@ -279,11 +263,7 @@ export async function PATCH(request: NextRequest) {
 
     // Handle refunds
     if (validatedData.status === 'refunded' && validatedData.refundAmount) {
-      paymentOperations.createRefund(
-        validatedData.id, 
-        validatedData.refundAmount, 
-        validatedData.notes || 'Admin refund'
-      );
+      await paymentOperations.updateStatus(validatedData.id, 'refunded', { notes: validatedData.notes, refundAmount: validatedData.refundAmount });
     } else {
       // Regular status update
       const additionalData: any = {};
@@ -293,7 +273,7 @@ export async function PATCH(request: NextRequest) {
           : validatedData.notes;
       }
 
-      paymentOperations.updateStatus(validatedData.id, validatedData.status, additionalData);
+      await paymentOperations.updateStatus(validatedData.id, validatedData.status, additionalData);
     }
 
     logSecurityEvent(createAuditLog({
@@ -302,7 +282,7 @@ export async function PATCH(request: NextRequest) {
       details: { 
         userId: user?.id,
         paymentId: validatedData.id,
-        oldStatus: existingPayment.payment_status,
+        oldStatus: existingPayment.status,
         newStatus: validatedData.status,
         refundAmount: validatedData.refundAmount
       },
@@ -329,7 +309,7 @@ export async function PATCH(request: NextRequest) {
         { 
           success: false, 
           error: 'Invalid update data',
-          details: error.errors 
+          details: (error as any).issues || [] 
         },
         { status: 400, headers: getSecurityHeaders() }
       );
@@ -371,7 +351,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const existingPayment = paymentOperations.getById(parseInt(paymentId));
+    const existingPayment = await paymentOperations.getById(parseInt(paymentId));
     if (!existingPayment) {
       return NextResponse.json(
         { success: false, error: 'Payment not found' },
@@ -380,14 +360,14 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Only allow deletion of pending payments
-    if (existingPayment.payment_status !== 'pending') {
+    if (existingPayment.status !== 'pending') {
       return NextResponse.json(
         { success: false, error: 'Can only delete pending payments' },
         { status: 400, headers: getSecurityHeaders() }
       );
     }
 
-    paymentOperations.delete(parseInt(paymentId));
+    await (await import('@/lib/dynamodb-client')).dynamoOperations.delete(`PAYMENT#${paymentId}`, `PAYMENT#${paymentId}`);
 
     logSecurityEvent(createAuditLog({
       action: 'ADMIN_PAYMENT_DELETED',
@@ -395,7 +375,7 @@ export async function DELETE(request: NextRequest) {
       details: { 
         userId: user?.id,
         paymentId: parseInt(paymentId),
-        paymentStatus: existingPayment.payment_status,
+        paymentStatus: existingPayment.status,
         amount: existingPayment.amount
       },
       success: true

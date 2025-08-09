@@ -1,51 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { contactOperations } from '@/lib/dynamodb-data';
 import { getSecurityHeaders, rateLimit, sanitizeInput, logSecurityEvent, createAuditLog } from '@/lib/security';
-
-// Initialize database
-const dbPath = path.join(process.cwd(), 'data', 'contacts.db');
-const db = new Database(dbPath);
-
-// Create contacts table
-db.exec(`
-  CREATE TABLE IF NOT EXISTS contact_submissions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    phone TEXT,
-    subject TEXT,
-    message TEXT NOT NULL,
-    child_age TEXT,
-    experience TEXT,
-    newsletter_signup BOOLEAN DEFAULT 0,
-    source TEXT DEFAULT 'website',
-    page TEXT,
-    status TEXT DEFAULT 'new',
-    priority TEXT DEFAULT 'normal',
-    assigned_to TEXT,
-    response_sent BOOLEAN DEFAULT 0,
-    response_date DATETIME,
-    ip_address TEXT,
-    user_agent TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
-// Create contact responses table for tracking follow-ups
-db.exec(`
-  CREATE TABLE IF NOT EXISTS contact_responses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    contact_id INTEGER,
-    response_type TEXT, -- 'email', 'phone', 'meeting'
-    response_content TEXT,
-    responder_name TEXT,
-    response_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (contact_id) REFERENCES contact_submissions(id)
-  )
-`);
 
 // Contact form schema
 const contactSchema = z.object({
@@ -60,107 +16,6 @@ const contactSchema = z.object({
   source: z.string().optional().default('website'),
   page: z.string().optional()
 });
-
-// Contact operations
-const contactOperations = {
-  create: (data: any) => {
-    const stmt = db.prepare(`
-      INSERT INTO contact_submissions 
-      (name, email, phone, subject, message, child_age, experience, 
-       newsletter_signup, source, page, ip_address, user_agent)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    return stmt.run(
-      data.name,
-      data.email,
-      data.phone,
-      data.subject,
-      data.message,
-      data.child_age,
-      data.experience,
-      data.newsletter_signup ? 1 : 0,
-      data.source,
-      data.page,
-      data.ip_address,
-      data.user_agent
-    );
-  },
-
-  getById: (id: number) => {
-    const stmt = db.prepare('SELECT * FROM contact_submissions WHERE id = ?');
-    return stmt.get(id);
-  },
-
-  getAll: (status?: string) => {
-    const query = status 
-      ? 'SELECT * FROM contact_submissions WHERE status = ? ORDER BY created_at DESC'
-      : 'SELECT * FROM contact_submissions ORDER BY created_at DESC';
-    const stmt = db.prepare(query);
-    return status ? stmt.all(status) : stmt.all();
-  },
-
-  updateStatus: (id: number, status: string, assignedTo?: string) => {
-    const stmt = db.prepare(`
-      UPDATE contact_submissions 
-      SET status = ?, assigned_to = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `);
-    return stmt.run(status, assignedTo, id);
-  },
-
-  markResponseSent: (id: number, responderName: string) => {
-    const stmt = db.prepare(`
-      UPDATE contact_submissions 
-      SET response_sent = 1, response_date = datetime('now'), updated_at = datetime('now')
-      WHERE id = ?
-    `);
-    const result = stmt.run(id);
-
-    // Add response record
-    const responseStmt = db.prepare(`
-      INSERT INTO contact_responses (contact_id, response_type, responder_name)
-      VALUES (?, 'email', ?)
-    `);
-    responseStmt.run(id, responderName);
-
-    return result;
-  },
-
-  getStats: () => {
-    const totalStmt = db.prepare('SELECT COUNT(*) as total FROM contact_submissions');
-    const newStmt = db.prepare('SELECT COUNT(*) as new FROM contact_submissions WHERE status = "new"');
-    const inProgressStmt = db.prepare('SELECT COUNT(*) as in_progress FROM contact_submissions WHERE status = "in_progress"');
-    const recentStmt = db.prepare(`
-      SELECT COUNT(*) as recent 
-      FROM contact_submissions 
-      WHERE created_at >= datetime('now', '-7 days')
-    `);
-    
-    const total = totalStmt.get() as { total: number };
-    const newCount = newStmt.get() as { new: number };
-    const inProgress = inProgressStmt.get() as { in_progress: number };
-    const recent = recentStmt.get() as { recent: number };
-    
-    return {
-      total: total.total,
-      new: newCount.new,
-      in_progress: inProgress.in_progress,
-      completed: total.total - newCount.new - inProgress.in_progress,
-      recent: recent.recent
-    };
-  },
-
-  getSubjectStats: () => {
-    const stmt = db.prepare(`
-      SELECT subject, COUNT(*) as count 
-      FROM contact_submissions 
-      WHERE created_at >= datetime('now', '-30 days')
-      GROUP BY subject 
-      ORDER BY count DESC
-    `);
-    return stmt.all();
-  }
-};
 
 // Submit contact form
 export async function POST(request: NextRequest) {
@@ -207,7 +62,7 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     // Create contact submission
-    const result = contactOperations.create({
+    const result = await contactOperations.create({
       ...sanitizedData,
       ip_address: ip,
       user_agent: userAgent
@@ -272,7 +127,7 @@ export async function POST(request: NextRequest) {
         { 
           success: false, 
           error: 'Please check your information and try again.',
-          details: error.errors 
+          details: (error as any).issues || [] 
         },
         { status: 400, headers: getSecurityHeaders() }
       );
@@ -301,7 +156,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const includeStats = searchParams.get('stats') === 'true';
 
-    const contacts = contactOperations.getAll(status || undefined);
+    const contacts = await contactOperations.getAll(status || undefined);
     
     const response: any = {
       success: true,
@@ -313,8 +168,8 @@ export async function GET(request: NextRequest) {
     };
 
     if (includeStats) {
-      response.stats = contactOperations.getStats();
-      response.subjectStats = contactOperations.getSubjectStats();
+      response.stats = await contactOperations.getStats();
+      response.subjectStats = await contactOperations.getSubjectStats();
     }
 
     return NextResponse.json(response, { headers: getSecurityHeaders() });
@@ -351,11 +206,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update status
-    contactOperations.updateStatus(id, status, assignedTo);
+    await contactOperations.updateStatus(id, status, assignedTo);
 
     // Mark response sent if requested
     if (markResponseSent && responderName) {
-      contactOperations.markResponseSent(id, responderName);
+      await contactOperations.markResponseSent(id, responderName);
     }
 
     logSecurityEvent(createAuditLog({

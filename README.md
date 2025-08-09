@@ -31,6 +31,11 @@ A modern web application for Cruces Gymnastics school, built with Next.js and Ty
    ```
 4. Open [http://localhost:3000](http://localhost:3000) to view the application
 
+## Payments
+
+- To run without Stripe, set `ENABLE_PAYMENTS=false` in `.env.local` (or omit the variable). The app will use mock payments.
+- To enable Stripe later, set `ENABLE_PAYMENTS=true` and configure `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
+
 ## Project Structure
 
 - `/app` - Next.js app directory with pages and API routes

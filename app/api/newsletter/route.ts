@@ -1,44 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { newsletterOperations } from '@/lib/dynamodb-data';
 import { getSecurityHeaders, rateLimit, sanitizeInput, logSecurityEvent, createAuditLog } from '@/lib/security';
-
-// Initialize database
-const dbPath = path.join(process.cwd(), 'data', 'newsletter.db');
-const db = new Database(dbPath);
-
-// Create newsletter table
-db.exec(`
-  CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    source TEXT DEFAULT 'website',
-    status TEXT DEFAULT 'active',
-    subscribed_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    unsubscribed_date DATETIME,
-    preferences TEXT, -- JSON string for email preferences
-    verification_token TEXT,
-    verified BOOLEAN DEFAULT 0,
-    ip_address TEXT,
-    user_agent TEXT
-  )
-`);
-
-// Create newsletter campaigns table for future use
-db.exec(`
-  CREATE TABLE IF NOT EXISTS newsletter_campaigns (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    content TEXT NOT NULL,
-    sent_date DATETIME,
-    recipient_count INTEGER DEFAULT 0,
-    open_count INTEGER DEFAULT 0,
-    click_count INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
 
 // Newsletter subscription schema
 const subscriptionSchema = z.object({
@@ -51,65 +14,6 @@ const subscriptionSchema = z.object({
     reminders: z.boolean().optional().default(true),
   }).optional()
 });
-
-// Newsletter operations
-const newsletterOperations = {
-  subscribe: (data: any) => {
-    const stmt = db.prepare(`
-      INSERT OR REPLACE INTO newsletter_subscribers 
-      (email, source, preferences, ip_address, user_agent, verified)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    return stmt.run(
-      data.email,
-      data.source || 'website',
-      JSON.stringify(data.preferences || {}),
-      data.ip_address,
-      data.user_agent,
-      data.verified || 0
-    );
-  },
-
-  unsubscribe: (email: string) => {
-    const stmt = db.prepare(`
-      UPDATE newsletter_subscribers 
-      SET status = 'unsubscribed', unsubscribed_date = datetime('now')
-      WHERE email = ?
-    `);
-    return stmt.run(email);
-  },
-
-  getSubscriber: (email: string) => {
-    const stmt = db.prepare('SELECT * FROM newsletter_subscribers WHERE email = ?');
-    return stmt.get(email);
-  },
-
-  getAllSubscribers: (status = 'active') => {
-    const stmt = db.prepare('SELECT * FROM newsletter_subscribers WHERE status = ? ORDER BY subscribed_date DESC');
-    return stmt.all(status);
-  },
-
-  getStats: () => {
-    const totalStmt = db.prepare('SELECT COUNT(*) as total FROM newsletter_subscribers');
-    const activeStmt = db.prepare('SELECT COUNT(*) as active FROM newsletter_subscribers WHERE status = "active"');
-    const recentStmt = db.prepare(`
-      SELECT COUNT(*) as recent 
-      FROM newsletter_subscribers 
-      WHERE subscribed_date >= datetime('now', '-30 days')
-    `);
-    
-    const total = totalStmt.get() as { total: number };
-    const active = activeStmt.get() as { active: number };
-    const recent = recentStmt.get() as { recent: number };
-    
-    return {
-      total: total.total,
-      active: active.active,
-      recent: recent.recent,
-      unsubscribed: total.total - active.active
-    };
-  }
-};
 
 // Subscribe to newsletter
 export async function POST(request: NextRequest) {
@@ -145,7 +49,7 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     // Check if already subscribed
-    const existingSubscriber = newsletterOperations.getSubscriber(sanitizedEmail);
+    const existingSubscriber = await newsletterOperations.getSubscriber(sanitizedEmail);
     
     if (existingSubscriber && existingSubscriber.status === 'active') {
       return NextResponse.json({
@@ -156,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Subscribe user
-    const result = newsletterOperations.subscribe({
+    const result = await newsletterOperations.subscribe({
       email: sanitizedEmail,
       source: validatedData.source,
       preferences: validatedData.preferences,
@@ -209,7 +113,7 @@ export async function POST(request: NextRequest) {
         { 
           success: false, 
           error: 'Invalid email address',
-          details: error.errors 
+          details: (error as any).issues || [] 
         },
         { status: 400, headers: getSecurityHeaders() }
       );
@@ -239,7 +143,7 @@ export async function DELETE(request: NextRequest) {
     const sanitizedEmail = sanitizeInput(email.toLowerCase().trim());
 
     // Verify subscriber exists
-    const subscriber = newsletterOperations.getSubscriber(sanitizedEmail);
+    const subscriber = await newsletterOperations.getSubscriber(sanitizedEmail);
     if (!subscriber) {
       return NextResponse.json(
         { success: false, error: 'Email address not found' },
@@ -248,7 +152,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Unsubscribe
-    newsletterOperations.unsubscribe(sanitizedEmail);
+    await newsletterOperations.unsubscribe(sanitizedEmail);
 
     logSecurityEvent(createAuditLog({
       action: 'NEWSLETTER_UNSUBSCRIBE',
@@ -283,8 +187,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const stats = newsletterOperations.getStats();
-    const subscribers = newsletterOperations.getAllSubscribers();
+    const stats = await newsletterOperations.getStats();
+    const subscribers = await newsletterOperations.getAllSubscribers();
 
     return NextResponse.json({
       success: true,

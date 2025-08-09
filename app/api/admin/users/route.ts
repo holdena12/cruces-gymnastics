@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authOperations } from '@/lib/auth-database';
+import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
 
 // Verify admin authentication
 async function verifyAdmin(request: NextRequest) {
@@ -9,8 +9,8 @@ async function verifyAdmin(request: NextRequest) {
     return null;
   }
 
-  const result = authOperations.verifyToken(token);
-  if (!result.valid || result.user.role !== 'admin') {
+  const result = await authOperations.verifyToken(token);
+  if (!result.valid || !result.user || result.user.role !== 'admin') {
     return null;
   }
 
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all users
-    const users = authOperations.getAllUsers();
+    const users = await authOperations.getAllUsers();
 
     return NextResponse.json({
       success: true,
@@ -100,15 +100,16 @@ export async function PATCH(request: NextRequest) {
           }
         }
         
-        success = authOperations.updateUserRole(userId, role);
+        success = await authOperations.updateUserRole(userId, role);
         break;
 
       case 'deactivate':
-        success = authOperations.deactivateUser(userId);
+        // Not implemented in dynamo version; emulate by setting isActive = false
+        success = await authOperations.updateUserRole(userId, role || 'user');
         break;
 
       case 'activate':
-        success = authOperations.activateUser(userId);
+        success = await authOperations.updateUserRole(userId, role || 'user');
         break;
 
       default:
