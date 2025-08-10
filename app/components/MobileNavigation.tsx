@@ -34,7 +34,6 @@ export default function MobileNavigation({ user, onLogout }: MobileNavigationPro
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/enroll', label: 'Enroll Now' },
-    { href: '/contact', label: 'Contact' },
   ];
 
   const isActive = (href: string) => {

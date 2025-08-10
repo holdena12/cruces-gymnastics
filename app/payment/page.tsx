@@ -41,8 +41,7 @@ function PaymentPageContent() {
     const programAdjustments: { [key: string]: { [key: string]: number } } = {
       'boys_competitive': { tuition: 150, registration: 75 },
       'girls_competitive': { tuition: 150, registration: 75 },
-      'ninja': { tuition: 100, registration: 40 },
-      'preschool': { tuition: 80, registration: 35 }
+      'ninja': { tuition: 100, registration: 40 }
     };
 
     const adjustment = programAdjustments[programType];

@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   keywords: [
     "gymnastics", "Las Cruces", "New Mexico", "gymnastics classes", 
     "competitive gymnastics", "recreational gymnastics", "toddler gymnastics", 
-    "ninja classes", "boys gymnastics", "girls gymnastics", "preschool gymnastics",
+    "ninja classes", "boys gymnastics", "girls gymnastics",
     "gymnastics training", "gymnastics center", "youth sports", "tumbling",
     "acrobatics", "children's activities", "fitness for kids"
   ],

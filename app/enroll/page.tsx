@@ -6,7 +6,6 @@ import MobileNavigation from '../components/MobileNavigation';
 // Payment amounts by program type
 const getRegistrationFee = (programType: string): number => {
   const fees: { [key: string]: number } = {
-    'preschool': 35,
     'boys_recreational': 50,
     'girls_recreational': 50,
     'boys_competitive': 75,
@@ -358,19 +357,7 @@ export default function EnrollPage() {
                     Select Program Type *
                   </label>
                   <div className="space-y-3">
-                    <div className="flex items-center">
-                      <input
-                        id="preschool"
-                        name="program"
-                        type="radio"
-                        value="preschool"
-                        required
-                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
-                      />
-                      <label htmlFor="preschool" className="ml-3 text-sm font-medium text-gray-700">
-                        Pre-School Gymnastics
-                      </label>
-                    </div>
+
                     <div className="flex items-center">
                       <input
                         id="boys_recreational"

@@ -155,7 +155,7 @@ describe('/api/enroll', () => {
         student_first_name: 'Test',
         student_last_name: 'Student',
         student_date_of_birth: '2018-01-01',
-        program_type: 'preschool',
+        program_type: 'boys_recreational',
         parent_first_name: 'Parent',
         parent_last_name: 'Test',
         parent_email: 'not-an-email',
@@ -250,7 +250,7 @@ describe('/api/enroll', () => {
         student_first_name: 'Test',
         student_last_name: 'Student',
         student_date_of_birth: '2018-01-01',
-        program_type: 'preschool',
+        program_type: 'boys_recreational',
         parent_first_name: 'Parent',
         parent_last_name: 'Test',
         parent_email: 'parent@example.com',
@@ -286,7 +286,7 @@ describe('/api/enroll', () => {
         student_first_name: 'Test',
         student_last_name: 'Student',
         student_date_of_birth: '2018-01-01',
-        program_type: 'preschool',
+        program_type: 'boys_recreational',
         parent_first_name: 'Parent',
         parent_last_name: 'Test',
         parent_email: 'parent@example.com',
@@ -330,7 +330,7 @@ describe('/api/enroll', () => {
         student_first_name: 'Test',
         student_last_name: 'Student',
         student_date_of_birth: '2018-01-01',
-        program_type: 'preschool',
+        program_type: 'boys_recreational',
         parent_first_name: 'Parent',
         parent_last_name: 'Test',
         parent_email: 'parent@example.com',
@@ -363,7 +363,6 @@ describe('/api/enroll', () => {
 
     test('should validate all required program types', async () => {
       const validProgramTypes = [
-        'preschool',
         'boys_recreational',
         'girls_recreational',
         'boys_competitive',

@@ -83,14 +83,7 @@ export default function HomePage() {
               >
                 Home
               </Link>
-              <Link
-                href="/contact"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/contact') ? 'text-red-600 bg-red-50' : 'text-gray-700 hover:text-red-600 hover:bg-gray-50'
-                }`}
-              >
-                Contact
-              </Link>
+
             </div>
 
             {/* Auth Buttons */}
@@ -155,12 +148,7 @@ export default function HomePage() {
               >
                 Start Your Journey
               </Link>
-              <Link
-                href="/contact"
-                className="border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white hover:text-red-600 transition-colors"
-              >
-                Contact Us
-              </Link>
+
             </div>
           </div>
         </div>
@@ -185,14 +173,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              {
-                title: "Pre-School Gymnastics",
-                age: "Ages 2-5",
-                description: "Fun, safe introduction to movement and basic gymnastics skills through play and exploration.",
-                features: ["Parent participation welcome", "Basic motor skills", "Social development", "Safe equipment"],
-                price: "Starting at $35/month",
-                color: "bg-blue-50 border-blue-200"
-              },
+
               {
                 title: "Recreational Gymnastics",
                 age: "Ages 6-18",
@@ -217,14 +198,7 @@ export default function HomePage() {
                 price: "Starting at $40/month",
                 color: "bg-orange-50 border-orange-200"
               },
-              {
-                title: "Adult Classes",
-                age: "Ages 18+",
-                description: "Gymnastics and fitness classes designed specifically for adult beginners and returners.",
-                features: ["Adult-focused curriculum", "Flexibility training", "Strength building", "Stress relief"],
-                price: "Starting at $60/month",
-                color: "bg-red-50 border-red-200"
-              },
+
               {
                 title: "Birthday Parties",
                 age: "All Ages",
@@ -327,7 +301,7 @@ export default function HomePage() {
               <ul className="space-y-2">
                 <li><Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link></li>
                 <li><Link href="/enroll" className="text-gray-300 hover:text-white transition-colors">Enroll Now</Link></li>
-                <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
+
                 <li><Link href="/privacy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
                 <li><Link href="/terms" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
               </ul>

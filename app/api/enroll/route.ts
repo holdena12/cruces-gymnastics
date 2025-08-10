@@ -13,7 +13,7 @@ const enrollmentSchema = z.object({
   previous_experience: z.string().optional(),
   
   // Program Selection
-  program_type: z.enum(['preschool', 'boys_recreational', 'girls_recreational', 'boys_competitive', 'girls_competitive', 'ninja'], {
+  program_type: z.enum(['boys_recreational', 'girls_recreational', 'boys_competitive', 'girls_competitive', 'ninja'], {
     message: 'Valid program type is required'
   }),
   
