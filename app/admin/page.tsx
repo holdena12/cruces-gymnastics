@@ -128,7 +128,12 @@ export default function AdminDashboard() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [paymentSummary, setPaymentSummary] = useState<any>(null);
+  const [paymentSummary, setPaymentSummary] = useState<{
+    total_outstanding: number;
+    total_paid: number;
+    total_overdue: number;
+    recent_payments: Payment[];
+  } | null>(null);
   const [editingUser, setEditingUser] = useState<number | null>(null);
   const [updateLoading, setUpdateLoading] = useState<number | null>(null);
   const [updateMessage, setUpdateMessage] = useState('');
@@ -599,7 +604,7 @@ export default function AdminDashboard() {
               ].map((tab) => (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
+                  onClick={() => setActiveTab(tab.key as 'overview' | 'enrollments' | 'users' | 'staff' | 'classes' | 'payments')}
                   className={`pb-3 border-b-2 font-semibold text-sm lg:text-base transition-colors whitespace-nowrap ${
                     activeTab === tab.key
                       ? 'text-red-600 border-red-600'

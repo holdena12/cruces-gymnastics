@@ -115,10 +115,10 @@ const structuredData = {
   "email": "info@crucesgymnastics.com",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "123 Gymnastics Way",
-    "addressLocality": "Las Cruces",
+    "streetAddress": "TBD",
+    "addressLocality": "TBD",
     "addressRegion": "NM",
-    "postalCode": "88001",
+    "postalCode": "TBD",
     "addressCountry": "US"
   },
   "geo": {

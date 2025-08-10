@@ -119,8 +119,7 @@ export default function ContactPage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Visit Us</h3>
               <p className="text-gray-600 mb-4">Come see our facility</p>
               <address className="text-red-600 font-semibold not-italic">
-                3200 W. Picacho Ave<br />
-                Las Cruces, NM 88001
+                TBD
               </address>
             </div>
           </div>
@@ -273,7 +272,7 @@ export default function ContactPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
               <div className="space-y-2 text-gray-300">
-                <p>3200 W. Picacho Ave<br />Las Cruces, NM 88001</p>
+                <p>TBD</p>
                 <p>📞 [PHONE NUMBER NEEDED]</p>
                 <p>✉️ [EMAIL ADDRESS NEEDED]</p>
                 <div className="mt-4">

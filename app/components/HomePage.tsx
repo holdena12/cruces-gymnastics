@@ -337,7 +337,7 @@ export default function HomePage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
               <div className="space-y-2 text-gray-300">
-                <p>3200 W. Picacho Ave<br />Las Cruces, NM 88001</p>
+                <p>TBD</p>
                 <p>(575) 527-1111</p>
                 <div className="mt-4">
                   <h4 className="font-semibold text-white mb-2">Hours</h4>

@@ -403,7 +403,7 @@ export default function RegisterPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
               <div className="space-y-2 text-gray-300">
-                <p>3200 W. Picacho Ave<br />Las Cruces, NM 88001</p>
+                <p>TBD</p>
                 <p>📞 [PHONE NUMBER NEEDED]</p>
                 <p>✉️ [EMAIL ADDRESS NEEDED]</p>
                 <div className="mt-4">

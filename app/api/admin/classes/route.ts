@@ -36,7 +36,15 @@ export async function GET(request: NextRequest) {
     
     // Enrollment details per class would require a GSI/secondary index or modeled relation items.
     // For now, return classes without join details to keep parity at list level.
-    const classesWithEnrollments = classes.map((classItem: any) => ({
+    const classesWithEnrollments = classes.map((classItem: { 
+      id: number; 
+      name: string; 
+      capacity: number; 
+      age_range: string; 
+      description?: string; 
+      schedule?: string; 
+      price_monthly?: number; 
+    }) => ({
       ...classItem,
       enrolled_students: [],
       enrollment_count: 0,

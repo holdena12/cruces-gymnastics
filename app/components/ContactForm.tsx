@@ -502,7 +502,7 @@ export default function ContactForm({
               </svg>
             </div>
             <h3 className="font-semibold text-gray-900">Address</h3>
-            <p className="text-gray-600">123 Gymnastics Way<br />Las Cruces, NM 88001</p>
+            <p className="text-gray-600">TBD</p>
           </div>
         </div>
       </div>

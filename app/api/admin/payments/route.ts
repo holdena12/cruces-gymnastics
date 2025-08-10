@@ -60,19 +60,30 @@ export async function GET(request: NextRequest) {
     const paymentType = searchParams.get('paymentType');
     const limit = parseInt(searchParams.get('limit') || '100');
 
+    // Define payment type interface
+    interface PaymentItem {
+      id?: string;
+      status: string;
+      paymentType?: string;
+      amount?: number | string;
+      createdAt?: string | number;
+      parent_email?: string;
+      [key: string]: unknown;
+    }
+
     // Get all payments with optional filters
-    let payments: any[] = [];
+    let payments: PaymentItem[] = [];
     const all = await (async () => {
       // No bulk list by default; scan all
       const result = await (await import('@/lib/dynamodb-client')).dynamoOperations.scan('begins_with(PK, :pk)', { ':pk': 'PAYMENT#' });
       return result.items || [];
     })();
-    payments = all as any[];
+    payments = all as PaymentItem[];
     if (status) {
-      payments = payments.filter((p: any) => p.status === status);
+      payments = payments.filter((p: PaymentItem) => p.status === status);
     }
     if (paymentType) {
-      payments = payments.filter((p: any) => p.paymentType === paymentType);
+      payments = payments.filter((p: PaymentItem) => p.paymentType === paymentType);
     }
     payments = payments.slice(0, limit);
 
@@ -80,14 +91,14 @@ export async function GET(request: NextRequest) {
     const allPayments = payments;
     const summary = {
       total: allPayments.length,
-      completed: allPayments.filter((p: any) => p.status === 'completed').length,
-      pending: allPayments.filter((p: any) => p.status === 'pending').length,
-      failed: allPayments.filter((p: any) => p.status === 'failed').length,
+      completed: allPayments.filter((p: PaymentItem) => p.status === 'completed').length,
+      pending: allPayments.filter((p: PaymentItem) => p.status === 'pending').length,
+      failed: allPayments.filter((p: PaymentItem) => p.status === 'failed').length,
       totalRevenue: allPayments
-        .filter((p: any) => p.status === 'completed')
-        .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0),
+        .filter((p: PaymentItem) => p.status === 'completed')
+        .reduce((sum: number, p: PaymentItem) => sum + Number(p.amount || 0), 0),
       recentPayments: allPayments
-        .filter((p: any) => {
+        .filter((p: PaymentItem) => {
           const paymentDate = new Date(p.createdAt || 0);
           const lastWeek = new Date();
           lastWeek.setDate(lastWeek.getDate() - 7);
@@ -266,7 +277,7 @@ export async function PATCH(request: NextRequest) {
       await paymentOperations.updateStatus(validatedData.id, 'refunded', { notes: validatedData.notes, refundAmount: validatedData.refundAmount });
     } else {
       // Regular status update
-      const additionalData: any = {};
+      const additionalData: { notes?: string; [key: string]: unknown } = {};
       if (validatedData.notes) {
         additionalData.notes = existingPayment.notes 
           ? `${existingPayment.notes} | ${validatedData.notes}`

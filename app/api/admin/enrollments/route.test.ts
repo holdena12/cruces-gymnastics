@@ -63,7 +63,7 @@ describe('/api/admin/enrollments', () => {
         }
       ];
 
-      mockEnrollmentOperations.getAll.mockReturnValue(mockEnrollments as any);
+      mockEnrollmentOperations.getAll.mockReturnValue(Promise.resolve(mockEnrollments));
 
       const request = new NextRequest('http://localhost:3000/api/admin/enrollments', {
         method: 'GET',

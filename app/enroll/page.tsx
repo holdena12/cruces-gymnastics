@@ -741,7 +741,7 @@ export default function EnrollPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
               <div className="space-y-2 text-gray-300">
-                <p>📍 123 Gymnastics Way<br />Las Cruces, NM 88001</p>
+                <p>📍 TBD</p>
                 <p>📞 (575) XXX-XXXX</p>
                 <p>✉️ info@crucesgymnastics.com</p>
                 <div className="mt-4">
