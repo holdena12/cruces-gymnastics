@@ -1,6 +1,6 @@
-"use client";
-import Link from "next/link";
-import { useState, useEffect } from "react";
+'use client';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import MobileNavigation from '../components/MobileNavigation';
 
 // Payment amounts by program type
@@ -141,20 +141,20 @@ export default function EnrollPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-mesh">
       {/* Mobile Navigation */}
       <MobileNavigation user={user} onLogout={handleLogout} />
 
       {/* Desktop Navigation */}
-      <nav className="bg-white shadow-md border-b border-gray-200 desktop-nav hidden lg:block">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+      <nav className="apple-glass sticky top-0 z-50 desktop-nav hidden lg:block">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">CGC</span>
+              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-sm">CGC</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-gradient">
                 Cruces Gymnastics Center
               </span>
             </Link>
@@ -163,15 +163,15 @@ export default function EnrollPage() {
             <div className="hidden lg:flex items-center space-x-8">
               <Link
                 href="/"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+                className="px-3 py-2 rounded-md text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
               >
                 Home
               </Link>
               <Link
-                href="/contact"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+                href="/enroll"
+                className="px-3 py-2 rounded-md text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
               >
-                Contact
+                Enroll
               </Link>
             </div>
 
@@ -179,24 +179,24 @@ export default function EnrollPage() {
             <div className="hidden lg:flex items-center space-x-4">
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">Hello, {user.email}</span>
+                  <span className="text-sm text-neutral-600">Hello, {user.email}</span>
                   <Link
                     href="/dashboard"
-                    className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                    className="bg-neutral-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors"
                   >
                     Dashboard
                   </Link>
                   {user.role === 'admin' && (
                     <Link
                       href="/admin"
-                      className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
+                      className="bg-neutral-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors"
                     >
                       Admin
                     </Link>
                   )}
                   <button
                     onClick={handleLogout}
-                    className="text-gray-700 hover:text-red-600 text-sm font-medium"
+                    className="text-neutral-700 hover:text-neutral-900 text-sm font-medium"
                   >
                     Sign Out
                   </button>
@@ -205,13 +205,13 @@ export default function EnrollPage() {
                 <div className="flex items-center space-x-4">
                   <Link
                     href="/login"
-                    className="text-gray-700 hover:text-red-600 text-sm font-medium"
+                    className="text-neutral-700 hover:text-neutral-900 text-sm font-medium"
                   >
                     Sign In
                   </Link>
                   <Link
                     href="/register"
-                    className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                    className="bg-neutral-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-neutral-800 transition-colors"
                   >
                     Create Account
                   </Link>
@@ -227,20 +227,16 @@ export default function EnrollPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Enrollment Application</h1>
-            <p className="text-lg text-gray-600">Complete the form below to apply for our gymnastics programs.</p>
+            <h1 className="text-4xl font-bold text-neutral-900 mb-4">Enrollment Application</h1>
+            <p className="text-lg text-neutral-600">Complete the form below to apply for our gymnastics programs.</p>
           </div>
 
           {/* Status Message */}
-          {submitStatus && (
-            <div className={`mb-8 p-4 rounded-lg ${
-              submitStatus.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
-              submitStatus.type === 'info' ? 'bg-blue-50 border border-blue-200 text-blue-800' :
-              'bg-red-50 border border-red-200 text-red-800'
-            }`}>
-              <p className="font-medium">{submitStatus.message}</p>
-            </div>
-          )}
+            {submitStatus && (
+              <div className={`mb-8 p-4 rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-800`}>
+                <p className="font-medium">{submitStatus.message}</p>
+              </div>
+            )}
 
           {submitStatus?.success && (
             <div className="mt-4">
@@ -248,18 +244,18 @@ export default function EnrollPage() {
 
               {/* Payment Options */}
               {submitStatus.enrollmentId && submitStatus.programType && (
-                <div className="bg-white border border-green-300 rounded-lg p-4 mt-4">
-                  <h3 className="font-semibold text-green-800 mb-3">Complete Your Registration</h3>
-                  <p className="text-sm text-green-700 mb-4">
+                <div className="bg-white border border-neutral-300 rounded-lg p-4 mt-4">
+                  <h3 className="font-semibold text-neutral-900 mb-3">Complete Your Registration</h3>
+                  <p className="text-sm text-neutral-700 mb-4">
                     Secure your spot by paying the registration fee now. You can also pay later if you prefer.
                   </p>
 
-                  <div className="bg-green-50 p-3 rounded-md mb-4">
+                  <div className="bg-neutral-50 p-3 rounded-md mb-4">
                     <div className="flex justify-between items-center text-sm">
                       <span>Registration Fee:</span>
                       <span className="font-semibold">${getRegistrationFee(submitStatus.programType).toFixed(2)}</span>
                     </div>
-                    <div className="text-xs text-green-600 mt-1">
+                    <div className="text-xs text-neutral-600 mt-1">
                       One-time fee to secure enrollment
                     </div>
                   </div>
@@ -267,19 +263,19 @@ export default function EnrollPage() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Link
                       href={`/payment?enrollmentId=${submitStatus.enrollmentId}&type=registration`}
-                      className="flex-1 bg-green-600 text-white text-center py-2 px-4 rounded-md hover:bg-green-700 text-sm font-medium"
+                      className="flex-1 bg-neutral-900 text-white text-center py-2 px-4 rounded-md hover:bg-neutral-800 text-sm font-medium"
                     >
                       Pay Registration Fee Now
                     </Link>
                     <button
                       onClick={() => setSubmitStatus(null)}
-                      className="flex-1 bg-white border border-green-600 text-green-600 py-2 px-4 rounded-md hover:bg-green-50 text-sm font-medium"
+                      className="flex-1 bg-white border border-neutral-900 text-neutral-900 py-2 px-4 rounded-md hover:bg-neutral-50 text-sm font-medium"
                     >
                       I'll Pay Later
                     </button>
                   </div>
 
-                  <p className="text-xs text-green-600 mt-3 text-center">
+                  <p className="text-xs text-neutral-600 mt-3 text-center">
                     💳 Secure payment powered by Stripe • No additional fees
                   </p>
                 </div>
@@ -288,14 +284,14 @@ export default function EnrollPage() {
           )}
 
           {/* Enrollment Form */}
-          <div className="bg-white rounded-lg shadow-md p-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="apple-card p-10">
+            <form onSubmit={handleSubmit} className="space-y-10">
               {/* Student Information */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Student Information</h2>
+            <h2 className="text-2xl font-semibold text-neutral-900 mb-6">Student Information</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="student_first_name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="student_first_name" className="block text-sm font-medium text-neutral-700 mb-2">
                       First Name *
                     </label>
                     <input
@@ -303,11 +299,11 @@ export default function EnrollPage() {
                       id="student_first_name"
                       name="student_first_name"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label htmlFor="student_last_name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="student_last_name" className="block text-sm font-medium text-neutral-700 mb-2">
                       Last Name *
                     </label>
                     <input
@@ -315,11 +311,11 @@ export default function EnrollPage() {
                       id="student_last_name"
                       name="student_last_name"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label htmlFor="student_date_of_birth" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="student_date_of_birth" className="block text-sm font-medium text-neutral-700 mb-2">
                       Date of Birth *
                     </label>
                     <input
@@ -327,18 +323,18 @@ export default function EnrollPage() {
                       id="student_date_of_birth"
                       name="student_date_of_birth"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label htmlFor="student_gender" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="student_gender" className="block text-sm font-medium text-neutral-700 mb-2">
                       Gender *
                     </label>
                     <select
                       id="student_gender"
                       name="student_gender"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     >
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
@@ -351,9 +347,9 @@ export default function EnrollPage() {
 
               {/* Program Selection */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Program Selection</h2>
+                <h2 className="text-2xl font-semibold text-neutral-900 mb-6">Program Selection</h2>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-4">
+                  <label className="block text-sm font-medium text-neutral-700 mb-4">
                     Select Program Type *
                   </label>
                   <div className="space-y-3">
@@ -365,9 +361,9 @@ export default function EnrollPage() {
                         type="radio"
                         value="boys_recreational"
                         required
-                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                        className="h-4 w-4 text-neutral-900 focus:ring-neutral-900 border-neutral-300"
                       />
-                      <label htmlFor="boys_recreational" className="ml-3 text-sm font-medium text-gray-700">
+                      <label htmlFor="boys_recreational" className="ml-3 text-sm font-medium text-neutral-700">
                         Boys Recreational Gymnastics
                       </label>
                     </div>
@@ -378,9 +374,9 @@ export default function EnrollPage() {
                         type="radio"
                         value="girls_recreational"
                         required
-                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                        className="h-4 w-4 text-neutral-900 focus:ring-neutral-900 border-neutral-300"
                       />
-                      <label htmlFor="girls_recreational" className="ml-3 text-sm font-medium text-gray-700">
+                      <label htmlFor="girls_recreational" className="ml-3 text-sm font-medium text-neutral-700">
                         Girls Recreational Gymnastics
                       </label>
                     </div>
@@ -391,9 +387,9 @@ export default function EnrollPage() {
                         type="radio"
                         value="boys_competitive"
                         required
-                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                        className="h-4 w-4 text-neutral-900 focus:ring-neutral-900 border-neutral-300"
                       />
-                      <label htmlFor="boys_competitive" className="ml-3 text-sm font-medium text-gray-700">
+                      <label htmlFor="boys_competitive" className="ml-3 text-sm font-medium text-neutral-700">
                         Boys Competitive Gymnastics
                       </label>
                     </div>
@@ -404,9 +400,9 @@ export default function EnrollPage() {
                         type="radio"
                         value="girls_competitive"
                         required
-                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                        className="h-4 w-4 text-neutral-900 focus:ring-neutral-900 border-neutral-300"
                       />
-                      <label htmlFor="girls_competitive" className="ml-3 text-sm font-medium text-gray-700">
+                      <label htmlFor="girls_competitive" className="ml-3 text-sm font-medium text-neutral-700">
                         Girls Competitive Gymnastics
                       </label>
                     </div>
@@ -417,9 +413,9 @@ export default function EnrollPage() {
                         type="radio"
                         value="ninja"
                         required
-                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                        className="h-4 w-4 text-neutral-900 focus:ring-neutral-900 border-neutral-300"
                       />
-                      <label htmlFor="ninja" className="ml-3 text-sm font-medium text-gray-700">
+                      <label htmlFor="ninja" className="ml-3 text-sm font-medium text-neutral-700">
                         Ninja Classes
                       </label>
                     </div>
@@ -427,13 +423,13 @@ export default function EnrollPage() {
                 </div>
 
                 <div className="mt-6">
-                  <label htmlFor="previous_experience" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="previous_experience" className="block text-sm font-medium text-neutral-700 mb-2">
                     Previous Gymnastics Experience
                   </label>
                   <select
                     id="previous_experience"
                     name="previous_experience"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                   >
                     <option value="">Select experience level</option>
                     <option value="none">No experience</option>
@@ -447,10 +443,10 @@ export default function EnrollPage() {
 
               {/* Parent/Guardian Information */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Parent/Guardian Information</h2>
+                <h2 className="text-2xl font-semibold text-neutral-900 mb-6">Parent/Guardian Information</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="parent_first_name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="parent_first_name" className="block text-sm font-medium text-neutral-700 mb-2">
                       First Name *
                     </label>
                     <input
@@ -458,11 +454,11 @@ export default function EnrollPage() {
                       id="parent_first_name"
                       name="parent_first_name"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label htmlFor="parent_last_name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="parent_last_name" className="block text-sm font-medium text-neutral-700 mb-2">
                       Last Name *
                     </label>
                     <input
@@ -470,11 +466,11 @@ export default function EnrollPage() {
                       id="parent_last_name"
                       name="parent_last_name"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label htmlFor="parent_email" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="parent_email" className="block text-sm font-medium text-neutral-700 mb-2">
                       Email Address *
                     </label>
                     <input
@@ -482,11 +478,11 @@ export default function EnrollPage() {
                       id="parent_email"
                       name="parent_email"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label htmlFor="parent_phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="parent_phone" className="block text-sm font-medium text-neutral-700 mb-2">
                       Phone Number *
                     </label>
                     <input
@@ -494,7 +490,7 @@ export default function EnrollPage() {
                       id="parent_phone"
                       name="parent_phone"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -502,10 +498,10 @@ export default function EnrollPage() {
 
               {/* Address Information */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Address Information</h2>
+                <h2 className="text-2xl font-semibold text-neutral-900 mb-6">Address Information</h2>
                 <div className="space-y-6">
                   <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="address" className="block text-sm font-medium text-neutral-700 mb-2">
                       Street Address *
                     </label>
                     <input
@@ -513,12 +509,12 @@ export default function EnrollPage() {
                       id="address"
                       name="address"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                       className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                       <label htmlFor="city" className="block text-sm font-medium text-neutral-700 mb-2">
                         City *
                       </label>
                       <input
@@ -526,18 +522,18 @@ export default function EnrollPage() {
                         id="city"
                         name="city"
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                         className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                       <label htmlFor="state" className="block text-sm font-medium text-neutral-700 mb-2">
                         State *
                       </label>
                       <select
                         id="state"
                         name="state"
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                         className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                       >
                         <option value="">Select State</option>
                         <option value="NM">New Mexico</option>
@@ -547,7 +543,7 @@ export default function EnrollPage() {
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="zip_code" className="block text-sm font-medium text-gray-700 mb-2">
+                       <label htmlFor="zip_code" className="block text-sm font-medium text-neutral-700 mb-2">
                         ZIP Code *
                       </label>
                       <input
@@ -555,7 +551,7 @@ export default function EnrollPage() {
                         id="zip_code"
                         name="zip_code"
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                         className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -564,10 +560,10 @@ export default function EnrollPage() {
 
               {/* Emergency Contact */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Emergency Contact</h2>
+                <h2 className="text-2xl font-semibold text-neutral-900 mb-6">Emergency Contact</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label htmlFor="emergency_contact_name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="emergency_contact_name" className="block text-sm font-medium text-neutral-700 mb-2">
                       Name *
                     </label>
                     <input
@@ -575,11 +571,11 @@ export default function EnrollPage() {
                       id="emergency_contact_name"
                       name="emergency_contact_name"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label htmlFor="emergency_contact_relationship" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="emergency_contact_relationship" className="block text-sm font-medium text-neutral-700 mb-2">
                       Relationship *
                     </label>
                     <input
@@ -588,11 +584,11 @@ export default function EnrollPage() {
                       name="emergency_contact_relationship"
                       required
                       placeholder="e.g., Grandparent, Uncle, Friend"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label htmlFor="emergency_contact_phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="emergency_contact_phone" className="block text-sm font-medium text-neutral-700 mb-2">
                       Phone Number *
                     </label>
                     <input
@@ -600,7 +596,7 @@ export default function EnrollPage() {
                       id="emergency_contact_phone"
                       name="emergency_contact_phone"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -608,10 +604,10 @@ export default function EnrollPage() {
 
               {/* Medical Information */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Medical Information</h2>
+                <h2 className="text-2xl font-semibold text-neutral-900 mb-6">Medical Information</h2>
                 <div className="space-y-6">
                   <div>
-                    <label htmlFor="medical_conditions" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="medical_conditions" className="block text-sm font-medium text-neutral-700 mb-2">
                       Medical Conditions, Allergies, or Special Needs
                     </label>
                     <textarea
@@ -619,11 +615,11 @@ export default function EnrollPage() {
                       name="medical_conditions"
                       rows={3}
                       placeholder="Please list any medical conditions, allergies, or special needs we should be aware of."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                       className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label htmlFor="medications" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="medications" className="block text-sm font-medium text-neutral-700 mb-2">
                       Current Medications
                     </label>
                     <textarea
@@ -631,7 +627,7 @@ export default function EnrollPage() {
                       name="medications"
                       rows={2}
                       placeholder="List any medications your child is currently taking."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                       className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -639,7 +635,7 @@ export default function EnrollPage() {
 
               {/* Waivers and Permissions */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Waivers and Permissions</h2>
+                <h2 className="text-2xl font-semibold text-neutral-900 mb-6">Waivers and Permissions</h2>
                 <div className="space-y-4">
                   <div className="flex items-start">
                     <input
@@ -647,9 +643,9 @@ export default function EnrollPage() {
                       name="emergency_medical_treatment"
                       type="checkbox"
                       required
-                      className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                      className="mt-1 h-4 w-4 text-neutral-900 focus:ring-neutral-900 border-neutral-300 rounded"
                     />
-                    <label htmlFor="emergency_medical_treatment" className="ml-3 text-sm text-gray-700">
+                    <label htmlFor="emergency_medical_treatment" className="ml-3 text-sm text-neutral-700">
                       I give permission for emergency medical treatment if needed. *
                     </label>
                   </div>
@@ -659,9 +655,9 @@ export default function EnrollPage() {
                       name="liability_waiver"
                       type="checkbox"
                       required
-                      className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                      className="mt-1 h-4 w-4 text-neutral-900 focus:ring-neutral-900 border-neutral-300 rounded"
                     />
-                    <label htmlFor="liability_waiver" className="ml-3 text-sm text-gray-700">
+                    <label htmlFor="liability_waiver" className="ml-3 text-sm text-neutral-700">
                       I acknowledge and accept the liability waiver and understand the risks involved in gymnastics activities. *
                     </label>
                   </div>
@@ -670,9 +666,9 @@ export default function EnrollPage() {
                       id="photo_permission"
                       name="photo_permission"
                       type="checkbox"
-                      className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                      className="mt-1 h-4 w-4 text-neutral-900 focus:ring-neutral-900 border-neutral-300 rounded"
                     />
-                    <label htmlFor="photo_permission" className="ml-3 text-sm text-gray-700">
+                    <label htmlFor="photo_permission" className="ml-3 text-sm text-neutral-700">
                       I give permission for my child's photo to be used for promotional purposes.
                     </label>
                   </div>
@@ -684,7 +680,7 @@ export default function EnrollPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="bg-neutral-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit Enrollment Application'}
                 </button>
@@ -695,18 +691,18 @@ export default function EnrollPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-neutral-950 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Company Info */}
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center">
                   <span className="text-white font-bold">CGC</span>
                 </div>
                 <span className="text-xl font-bold">Cruces Gymnastics Center</span>
               </div>
-              <p className="text-gray-300 mb-4">
+              <p className="text-neutral-300 mb-4">
                 2025 Premier gymnastics training in Las Cruces, New Mexico. Building confidence,
                 character, and champions since 2025.
               </p>
@@ -716,32 +712,17 @@ export default function EnrollPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2">
-                <li><Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link></li>
-                <li><Link href="/enroll" className="text-gray-300 hover:text-white transition-colors">Enroll Now</Link></li>
-                <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
-                <li><Link href="/privacy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/" className="text-neutral-300 hover:text-white transition-colors">Home</Link></li>
+                <li><Link href="/enroll" className="text-neutral-300 hover:text-white transition-colors">Enroll Now</Link></li>
+                <li><Link href="/privacy" className="text-neutral-300 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-neutral-300 hover:text-white transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
 
-            {/* Contact Info */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
-              <div className="space-y-2 text-gray-300">
-                <p>📍 TBD</p>
-                <p>📞 (575) XXX-XXXX</p>
-                <p>✉️ info@crucesgymnastics.com</p>
-                <div className="mt-4">
-                  <h4 className="font-semibold text-white mb-2">Hours</h4>
-                  <p className="text-sm">Mon-Fri: 3:00 PM - 8:00 PM</p>
-                  <p className="text-sm">Saturday: 9:00 AM - 5:00 PM</p>
-                  <p className="text-sm">Sunday: 10:00 AM - 4:00 PM</p>
-                </div>
-              </div>
-            </div>
+
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-neutral-400">
             <p>&copy; 2025 Cruces Gymnastics Center. All rights reserved.</p>
           </div>
         </div>

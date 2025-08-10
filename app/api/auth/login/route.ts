@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { dynamoAuthOperations as authOperations } from '@/lib/dynamodb-auth';
+import { authOperations } from '@/lib/auth-database';
 import { rateLimit, getSecurityHeaders, sanitizeInput, logSecurityEvent, createAuditLog } from '@/lib/security';
 
 // Validation schema

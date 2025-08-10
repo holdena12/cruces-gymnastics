@@ -55,59 +55,64 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-mesh">
       {/* Mobile Navigation */}
       <MobileNavigation user={user} onLogout={handleLogout} />
 
-      {/* Desktop Navigation */}
-      <nav className="bg-white shadow-md border-b border-gray-200 desktop-nav hidden lg:block">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+      {/* Desktop Navigation - Apple Inspired */}
+      <nav className="apple-glass sticky top-0 z-50 desktop-nav hidden lg:block">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">CGC</span>
+              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-sm">CGC</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-gradient">
                 Cruces Gymnastics Center
               </span>
             </Link>
 
             {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center space-x-8">
+            <div className="hidden lg:flex items-center space-x-6">
               <Link
                 href="/"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/') ? 'text-red-600 bg-red-50' : 'text-gray-700 hover:text-red-600 hover:bg-gray-50'
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive('/') ? 'text-primary-600 bg-primary-50' : 'text-neutral-700 hover:text-primary-600 hover:bg-neutral-100'
                 }`}
               >
                 Home
               </Link>
-
+              <Link
+                href="/enroll"
+                className="text-neutral-700 hover:text-primary-600 transition-colors font-medium"
+              >
+                Enroll
+              </Link>
             </div>
 
             {/* Auth Buttons */}
             <div className="hidden lg:flex items-center space-x-4">
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">Hello, {user.email}</span>
+                  <span className="text-sm text-neutral-600">Hello, {user.email}</span>
                   <Link
                     href="/dashboard"
-                    className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                    className="apple-button"
                   >
                     Dashboard
                   </Link>
                   {user.role === 'admin' && (
                     <Link
                       href="/admin"
-                      className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
+                      className="btn btn-secondary"
                     >
                       Admin
                     </Link>
                   )}
                   <button
                     onClick={handleLogout}
-                    className="text-gray-700 hover:text-red-600 text-sm font-medium"
+                    className="btn btn-ghost"
                   >
                     Sign Out
                   </button>
@@ -116,13 +121,13 @@ export default function HomePage() {
                 <div className="flex items-center space-x-4">
                   <Link
                     href="/login"
-                    className="text-gray-700 hover:text-red-600 text-sm font-medium"
+                    className="btn btn-ghost"
                   >
                     Sign In
                   </Link>
                   <Link
                     href="/enroll"
-                    className="bg-red-600 text-white px-6 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                    className="apple-button"
                   >
                     Enroll Now
                   </Link>
@@ -133,41 +138,53 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Premier Gymnastics Training in Las Cruces
-            </h1>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-              <Link
-                href="/enroll"
-                className="bg-white text-red-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg"
-              >
-                Start Your Journey
-              </Link>
-
-            </div>
+      {/* Hero Section - Netflix Inspired */}
+      <section className="hero-modern py-24 lg:py-32 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-hero"></div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
+            <h1 className="spotify-heading text-5xl md:text-7xl mb-6 animate-fade-in-up">
+            Home of the most successful mens gymnastics program in southern NM
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 text-balance text-white animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+            Building champions through excellence, dedication, and world-class training
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+            <Link
+              href="/enroll"
+              className="apple-button btn-lg magnetic-button"
+            >
+              <span>Start Your Journey</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
           </div>
         </div>
         
+        {/* Floating Elements */}
+        <div className="absolute top-20 left-10 floating-element opacity-20">
+          <div className="w-20 h-20 bg-accent-400 rounded-full blur-xl"></div>
+        </div>
+        <div className="absolute bottom-20 right-10 floating-element opacity-20" style={{animationDelay: '2s'}}>
+          <div className="w-32 h-32 bg-highlight-400 rounded-full blur-xl"></div>
+        </div>
+        
         {/* Social Share */}
-        <div className="absolute bottom-4 right-4 mobile-hidden">
+        <div className="absolute bottom-6 right-6 mobile-hidden z-20">
           <SocialShare variant="compact" />
         </div>
       </section>
 
       {/* Programs Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
               Our Programs
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              We offer comprehensive gymnastics programs designed for every age and skill level.
+            <p className="text-xl text-neutral-600 max-w-3xl mx-auto">
+              We offer comprehensive gymnastics programs designed for every age and skill level, 
+              building strength, confidence, and athletic excellence.
             </p>
           </div>
 
@@ -180,7 +197,8 @@ export default function HomePage() {
                 description: "Structured classes focusing on fundamental gymnastics skills and physical fitness.",
                 features: ["All apparatus training", "Skill progression", "Strength & flexibility", "Team building"],
                 price: "Starting at $50/month",
-                color: "bg-green-50 border-green-200"
+                icon: "🤸‍♀️",
+                gradient: "bg-accent-50 border-accent-200"
               },
               {
                 title: "Competitive Team",
@@ -188,7 +206,8 @@ export default function HomePage() {
                 description: "Advanced training for dedicated athletes pursuing competitive gymnastics excellence.",
                 features: ["Elite coaching", "Competition prep", "Advanced skills", "Team travel"],
                 price: "Starting at $75/month",
-                color: "bg-purple-50 border-purple-200"
+                icon: "🏆",
+                gradient: "bg-primary-50 border-primary-200"
               },
               {
                 title: "Ninja Classes",
@@ -196,39 +215,39 @@ export default function HomePage() {
                 description: "Obstacle course training combining gymnastics, martial arts, and parkour movements.",
                 features: ["Obstacle courses", "Strength training", "Agility development", "Problem solving"],
                 price: "Starting at $40/month",
-                color: "bg-orange-50 border-orange-200"
+                icon: "🥷",
+                gradient: "bg-highlight-50 border-highlight-200"
               },
-
               {
                 title: "Birthday Parties",
                 age: "All Ages",
                 description: "Unforgettable birthday celebrations with gymnastics activities and dedicated party hosts.",
                 features: ["2-hour party package", "Dedicated host", "Party room included", "Gymnastics activities"],
                 price: "Starting at $200",
-                color: "bg-pink-50 border-pink-200"
+                icon: "🎉",
+                gradient: "bg-neutral-50 border-neutral-200"
               }
             ].map((program, index) => (
-              <div key={index} className={`${program.color} border rounded-lg p-6 transition-transform hover:scale-105`}>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{program.title}</h3>
-                <p className="text-sm font-medium text-gray-600 mb-3">{program.age}</p>
-                <p className="text-gray-700 mb-4">{program.description}</p>
+              <div key={index} className={`apple-card p-8 ${program.gradient} border-2 gpu-accelerated animate-fade-in-scale`} style={{animationDelay: `${index * 0.1}s`}}>
+                <div className="text-4xl mb-4">{program.icon}</div>
+                <h3 className="text-2xl font-bold text-neutral-900 mb-2">{program.title}</h3>
+                <div className="badge badge-primary mb-4">{program.age}</div>
+                <p className="text-neutral-700 mb-6 leading-relaxed">{program.description}</p>
                 
-                <ul className="space-y-2 mb-4">
+                <ul className="space-y-3 mb-6">
                   {program.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-sm text-gray-600">
-                      <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
+                    <li key={idx} className="flex items-center text-sm text-neutral-600">
+                      <div className="w-2 h-2 bg-accent-500 rounded-full mr-3 flex-shrink-0"></div>
                       {feature}
                     </li>
                   ))}
                 </ul>
                 
-                <div className="border-t pt-4">
-                  <p className="text-lg font-semibold text-gray-900 mb-3">{program.price}</p>
+                <div className="border-t border-neutral-200 pt-6">
+                  <p className="text-lg font-bold text-neutral-900 mb-4">{program.price}</p>
                   <Link
                     href="/enroll"
-                    className="block w-full text-center bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+                    className="apple-button w-full justify-center"
                   >
                     Learn More
                   </Link>
@@ -240,8 +259,8 @@ export default function HomePage() {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-gradient-to-br from-neutral-50 to-neutral-100">
+        <div className="max-w-4xl mx-auto px-6">
           <Newsletter
             title="Stay Connected with Cruces Gymnastics!"
             description="Get the latest updates on classes, events, special offers, and gymnastics tips delivered to your inbox."
@@ -250,7 +269,7 @@ export default function HomePage() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-neutral-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <ContactForm
             variant="compact"
@@ -261,19 +280,19 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-neutral-950 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Company Info */}
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center">
                   <span className="text-white font-bold">CGC</span>
                 </div>
                 <span className="text-xl font-bold">Cruces Gymnastics Center</span>
               </div>
-              <p className="text-gray-300 mb-4">
-                Premier gymnastics training in Las Cruces, New Mexico. Building confidence,
+              <p className="text-neutral-300 mb-4">
+                2025 Premier gymnastics training in Las Cruces, New Mexico. Building confidence,
                 character, and champions since 2025.
               </p>
               <div className="flex space-x-4">
@@ -299,39 +318,24 @@ export default function HomePage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2">
-                <li><Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link></li>
-                <li><Link href="/enroll" className="text-gray-300 hover:text-white transition-colors">Enroll Now</Link></li>
-
-                <li><Link href="/privacy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/" className="text-neutral-300 hover:text-white transition-colors">Home</Link></li>
+                <li><Link href="/enroll" className="text-neutral-300 hover:text-white transition-colors">Enroll Now</Link></li>
+                <li><Link href="/privacy" className="text-neutral-300 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-neutral-300 hover:text-white transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
 
-            {/* Contact Info */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
-              <div className="space-y-2 text-gray-300">
-                <p>TBD</p>
-                <p>(575) 527-1111</p>
-                <div className="mt-4">
-                  <h4 className="font-semibold text-white mb-2">Hours</h4>
-                  <p className="text-sm">Mon-Fri: 3:00 PM - 8:00 PM</p>
-                  <p className="text-sm">Saturday: 9:00 AM - 5:00 PM</p>
-                  <p className="text-sm">Sunday: 10:00 AM - 4:00 PM</p>
-                </div>
-              </div>
-            </div>
+
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-neutral-400">
             <p>&copy; 2025 Cruces Gymnastics Center. All rights reserved.</p>
           </div>
         </div>
       </footer>
 
-      {/* Floating Contact & Newsletter */}
+      {/* Floating Contact */}
       <ContactForm variant="floating" />
-      <Newsletter variant="floating" />
       
       {/* Floating Social Share */}
       <SocialShare variant="floating" />

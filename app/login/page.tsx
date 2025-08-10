@@ -105,30 +105,30 @@ export default function LoginPage() {
   // Show loading screen while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-mesh flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-neutral-600">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-mesh">
       {/* Mobile Navigation */}
       <MobileNavigation user={user} onLogout={handleLogout} />
 
       {/* Desktop Navigation */}
-      <nav className="bg-white shadow-md border-b border-gray-200 desktop-nav hidden lg:block">
+      <nav className="apple-glass border-b border-white/10 desktop-nav hidden lg:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
                 <span className="text-white font-bold">CGC</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-gradient">
                 Cruces Gymnastics Center
               </span>
             </Link>
@@ -137,15 +137,15 @@ export default function LoginPage() {
             <div className="hidden lg:flex items-center space-x-8">
               <Link
                 href="/"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+                className="px-3 py-2 rounded-md text-sm font-medium text-neutral-700 hover:text-primary-600 hover:bg-white/5 transition-colors"
               >
                 Home
               </Link>
               <Link
-                href="/contact"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+                href="/enroll"
+                className="px-3 py-2 rounded-md text-sm font-medium text-neutral-700 hover:text-primary-600 hover:bg-white/5 transition-colors"
               >
-                Contact
+                Enroll
               </Link>
             </div>
 
@@ -153,13 +153,13 @@ export default function LoginPage() {
             <div className="hidden lg:flex items-center space-x-4">
               <Link
                 href="/login"
-                className="text-red-600 hover:text-red-700 text-sm font-medium"
+                className="text-primary-600 hover:text-primary-700 text-sm font-medium"
               >
                 Sign In
               </Link>
               <Link
                 href="/enroll"
-                className="bg-red-600 text-white px-6 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                className="apple-button btn-primary magnetic-button"
               >
                 Enroll Now
               </Link>
@@ -169,40 +169,43 @@ export default function LoginPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="hero-modern bg-gradient-hero text-white py-16 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="spotify-heading text-4xl md:text-5xl font-bold mb-4 animate-fade-in-up">
               Welcome Back
             </h1>
-            <p className="text-xl text-red-100 max-w-2xl mx-auto">
+            <p className="text-xl text-white/80 max-w-2xl mx-auto animate-fade-in-up" style={{animationDelay: '0.2s'}}>
               Sign in to your account to access your gymnastics journey.
             </p>
           </div>
         </div>
+        <div className="absolute inset-0 bg-gradient-primary opacity-90"></div>
+        <div className="floating-element absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+        <div className="floating-element absolute bottom-20 right-10 w-32 h-32 bg-accent-500/20 rounded-full blur-xl" style={{animationDelay: '1s'}}></div>
       </section>
 
       {/* Login Form Section */}
-      <section className="py-16">
+      <section className="py-16 relative">
         <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="apple-card bg-white backdrop-blur-md border border-neutral-200/50 p-8 animate-fade-in-scale">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl font-bold text-neutral-900 mb-2">
                 Sign in to your account
               </h2>
-              <p className="text-gray-600">
+              <p className="text-neutral-600">
                 Or{' '}
-                <Link href="/register" className="font-medium text-red-600 hover:text-red-700 transition-colors">
+                <Link href="/register" className="font-medium text-primary-600 hover:text-primary-700 transition-colors">
                   create a new account
                 </Link>
               </p>
             </div>
 
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+              <div className="mb-6 p-4 bg-highlight-50 border border-highlight-200 text-highlight-700 rounded-lg">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="h-5 w-5 text-highlight-400" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                     </svg>
                   </div>
@@ -214,10 +217,10 @@ export default function LoginPage() {
             )}
             
             {forgotPasswordMessage && (
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg">
+              <div className="mb-6 p-4 bg-accent-50 border border-accent-200 text-accent-700 rounded-lg">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="h-5 w-5 text-accent-400" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                   </div>
@@ -230,7 +233,7 @@ export default function LoginPage() {
 
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-2">
                   Email Address
                 </label>
                 <input
@@ -241,13 +244,13 @@ export default function LoginPage() {
                   required
                   value={emailValue}
                   onChange={(e) => setEmailValue(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition-all duration-200 hover:border-primary-300"
                   placeholder="Enter your email address"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-2">
                   Password
                 </label>
                 <input
@@ -256,7 +259,7 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition-all duration-200 hover:border-primary-300"
                   placeholder="Enter your password"
                 />
               </div>
@@ -267,9 +270,9 @@ export default function LoginPage() {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-neutral-700">
                     Remember me
                   </label>
                 </div>
@@ -277,7 +280,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
                 >
                   Forgot your password?
                 </button>
@@ -286,7 +289,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full apple-button btn-primary magnetic-button"
               >
                 {isLoading ? (
                   <>
@@ -325,19 +328,16 @@ export default function LoginPage() {
             )}
 
             {/* Quick Links */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="mt-8 pt-6 border-t border-neutral-200">
               <div className="text-center space-y-2">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-neutral-600">
                   New to Cruces Gymnastics?{' '}
-                  <Link href="/enroll" className="font-medium text-red-600 hover:text-red-700 transition-colors">
+                  <Link href="/enroll" className="font-medium text-primary-600 hover:text-primary-700 transition-colors">
                     Start your enrollment application
                   </Link>
                 </p>
-                <p className="text-sm text-gray-600">
-                  Need help?{' '}
-                  <Link href="/contact" className="font-medium text-red-600 hover:text-red-700 transition-colors">
-                    Contact us
-                  </Link>
+                <p className="text-sm text-neutral-600">
+                  Need help? Contact us using the floating contact form
                 </p>
               </div>
             </div>
@@ -346,18 +346,18 @@ export default function LoginPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-neutral-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Company Info */}
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
                   <span className="text-white font-bold">CGC</span>
                 </div>
                 <span className="text-xl font-bold">Cruces Gymnastics Center</span>
               </div>
-              <p className="text-gray-300 mb-4">
+              <p className="text-neutral-300 mb-4">
                 2025 Premier gymnastics training in Las Cruces, New Mexico. Building confidence,
                 character, and champions since 2025.
               </p>
@@ -367,32 +367,17 @@ export default function LoginPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2">
-                <li><Link href="/" className="text-gray-300 hover:text-white transition-colors">Home</Link></li>
-                <li><Link href="/enroll" className="text-gray-300 hover:text-white transition-colors">Enroll Now</Link></li>
-                <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
-                <li><Link href="/privacy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link href="/" className="text-neutral-300 hover:text-white transition-colors">Home</Link></li>
+                <li><Link href="/enroll" className="text-neutral-300 hover:text-white transition-colors">Enroll Now</Link></li>
+                <li><Link href="/privacy" className="text-neutral-300 hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-neutral-300 hover:text-white transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
 
-            {/* Contact Info */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
-              <div className="space-y-2 text-gray-300">
-                <p>3200 W. Picacho Ave<br />Las Cruces, NM 88001</p>
-                <p>📞 [PHONE NUMBER NEEDED]</p>
-                <p>✉️ [EMAIL ADDRESS NEEDED]</p>
-                <div className="mt-4">
-                  <h4 className="font-semibold text-white mb-2">Hours</h4>
-                  <p className="text-sm">Mon-Fri: 3:00 PM - 8:00 PM</p>
-                  <p className="text-sm">Saturday: 9:00 AM - 5:00 PM</p>
-                  <p className="text-sm">Sunday: 10:00 AM - 4:00 PM</p>
-                </div>
-              </div>
-            </div>
+
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-neutral-400">
             <p>&copy; 2025 Cruces Gymnastics Center. All rights reserved.</p>
           </div>
         </div>

@@ -477,10 +477,10 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neutral-900 mx-auto"></div>
+          <p className="mt-4 text-neutral-600">Loading admin dashboard...</p>
         </div>
       </div>
     );
@@ -516,55 +516,53 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-mesh">
       {/* Mobile Navigation */}
       <MobileNavigation user={user} onLogout={handleLogout} />
 
       {/* Desktop Navigation */}
-      <nav className="bg-white shadow-md border-b border-gray-200 desktop-nav hidden lg:block">
+      <nav className="apple-glass border-b border-white/10 desktop-nav hidden lg:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-neutral-900 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold">CGC</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">
-                Cruces Gymnastics Center
-              </span>
+              <span className="text-xl font-bold text-gradient">Cruces Gymnastics Center</span>
             </Link>
 
             {/* Desktop Menu */}
             <div className="hidden lg:flex items-center space-x-8">
               <Link
                 href="/"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+                className="px-3 py-2 rounded-md text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-white/5 transition-colors"
               >
                 Home
               </Link>
               <Link
-                href="/contact"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-gray-50 transition-colors"
+                href="/enroll"
+                className="px-3 py-2 rounded-md text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-white/5 transition-colors"
               >
-                Contact
+                Enroll
               </Link>
-              <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+              <span className="bg-neutral-900 text-white px-3 py-1 rounded-full text-xs font-semibold">
                 Admin
               </span>
             </div>
 
             {/* User & Actions */}
             <div className="hidden lg:flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {user?.first_name}!</span>
+              <span className="text-sm text-neutral-600">Welcome, {user?.first_name}!</span>
               <Link
                 href="/dashboard"
-                className="text-gray-700 hover:text-red-600 text-sm font-medium transition-colors"
+                className="text-neutral-700 hover:text-neutral-900 text-sm font-medium transition-colors"
               >
                 Dashboard
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-gray-700 hover:text-red-600 text-sm font-medium transition-colors"
+                className="text-neutral-700 hover:text-neutral-900 text-sm font-medium transition-colors"
               >
                 Sign Out
               </button>
@@ -574,13 +572,14 @@ export default function AdminDashboard() {
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-red-600 via-red-700 to-red-800 text-white py-16">
+      <section className="hero-modern text-white py-16 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-hero"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Admin Dashboard
             </h1>
-            <p className="text-xl text-red-100 max-w-2xl mx-auto">
+            <p className="text-xl text-white/80 max-w-2xl mx-auto">
               Manage enrollments, users, staff, and center operations with comprehensive administrative tools.
             </p>
           </div>
@@ -621,19 +620,19 @@ export default function AdminDashboard() {
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             <div className="bg-white rounded-lg shadow-lg p-8">
-              <h3 className="text-2xl font-semibold text-gray-900 mb-3">Total Enrollments</h3>
-              <p className="text-5xl font-bold text-red-600">{enrollments.length}</p>
+              <h3 className="text-2xl font-semibold text-neutral-900 mb-3">Total Enrollments</h3>
+              <p className="text-5xl font-bold text-neutral-900">{enrollments.length}</p>
             </div>
             <div className="bg-white rounded-lg shadow-lg p-8">
-              <h3 className="text-2xl font-semibold text-gray-900 mb-3">Active Users</h3>
-              <p className="text-5xl font-bold text-blue-600">{users.filter(u => u.is_active).length}</p>
+              <h3 className="text-2xl font-semibold text-neutral-900 mb-3">Active Users</h3>
+              <p className="text-5xl font-bold text-neutral-900">{users.filter(u => u.is_active).length}</p>
             </div>
             <div className="bg-white rounded-lg shadow-lg p-8">
-              <h3 className="text-2xl font-semibold text-gray-900 mb-3">Pending Applications</h3>
+              <h3 className="text-2xl font-semibold text-neutral-900 mb-3">Pending Applications</h3>
               <p className="text-5xl font-bold text-yellow-600">{enrollments.filter(e => e.status === 'pending').length}</p>
             </div>
             <div className="bg-white rounded-lg shadow-lg p-8">
-              <h3 className="text-2xl font-semibold text-gray-900 mb-3">Admin Users</h3>
+              <h3 className="text-2xl font-semibold text-neutral-900 mb-3">Admin Users</h3>
               <p className="text-5xl font-bold text-purple-600">{users.filter(u => u.role === 'admin').length}</p>
             </div>
           </div>
@@ -642,26 +641,26 @@ export default function AdminDashboard() {
         {/* Enrollments Tab */}
         {activeTab === 'enrollments' && (
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="px-8 py-6 border-b border-gray-200">
-              <h2 className="text-2xl font-semibold text-gray-900">Enrollment Applications</h2>
+            <div className="px-8 py-6 border-b border-neutral-200">
+              <h2 className="text-2xl font-semibold text-neutral-900">Enrollment Applications</h2>
               
               {/* Update Message */}
               {updateMessage && (
                 <div 
                   className={`mt-6 p-4 rounded-lg ${
                     updateMessage.includes('successfully') 
-                      ? 'bg-green-50 border border-green-200 text-green-800' 
-                      : 'bg-red-50 border border-red-200 text-red-800'
+                    ? 'bg-neutral-100 border border-neutral-200 text-neutral-800' 
+                    : 'bg-neutral-100 border border-neutral-200 text-neutral-800'
                   }`}
                 >
                   <div className="flex">
                     <div className="flex-shrink-0">
                       {updateMessage.includes('successfully') ? (
-                        <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <svg className="h-5 w-5 text-neutral-500" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       ) : (
-                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <svg className="h-5 w-5 text-neutral-500" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                         </svg>
                       )}
@@ -675,40 +674,40 @@ export default function AdminDashboard() {
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-neutral-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parent Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Program</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Student</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Parent Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Program</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {enrollments.map((enrollment) => (
                     <tr key={enrollment.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-neutral-900">
                           {enrollment.student_first_name} {enrollment.student_last_name}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
                         {enrollment.parent_email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-neutral-100 text-neutral-800">
                           {enrollment.program_type}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
                         {new Date(enrollment.submission_date).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           enrollment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          enrollment.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          'bg-red-100 text-red-800'
+                          enrollment.status === 'approved' ? 'bg-neutral-100 text-neutral-800' :
+                          'bg-neutral-100 text-neutral-800'
                         }`}>
                           {enrollment.status}
                         </span>
@@ -717,7 +716,7 @@ export default function AdminDashboard() {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleViewApplication(enrollment)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-neutral-700 hover:text-neutral-900"
                           >
                             View
                           </button>
@@ -727,7 +726,7 @@ export default function AdminDashboard() {
                               <button
                                 onClick={() => handleApplicationAction(enrollment.id, 'approve')}
                                 disabled={processingApplication === enrollment.id}
-                                className="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="text-neutral-700 hover:text-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 {processingApplication === enrollment.id ? 'Processing...' : 'Approve'}
                               </button>
@@ -740,7 +739,7 @@ export default function AdminDashboard() {
                               </button>
                               <button
                                 onClick={() => setShowDeleteConfirm(enrollment.id)}
-                                className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition-colors text-sm ml-2"
+                                className="bg-neutral-900 text-white px-3 py-1 rounded-md hover:bg-neutral-800 transition-colors text-sm ml-2"
                               >
                                 Delete
                               </button>
@@ -748,7 +747,7 @@ export default function AdminDashboard() {
                           )}
                           
                           {enrollment.status !== 'pending' && (
-                            <span className="text-gray-400 text-xs">
+                            <span className="text-neutral-400 text-xs">
                               {enrollment.status === 'approved' ? 'Already approved' : 'Already rejected'}
                             </span>
                           )}
@@ -765,15 +764,15 @@ export default function AdminDashboard() {
         {/* Users Tab */}
         {activeTab === 'users' && (
           <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
+            <div className="px-6 py-4 border-b border-neutral-200">
+              <h2 className="text-xl font-semibold text-neutral-900">User Management</h2>
               
               {/* Update Message */}
               {updateMessage && (
                 <div className={`mt-4 p-3 rounded-lg ${
                   updateMessage.includes('successfully') 
-                    ? 'bg-green-100 text-green-800 border border-green-200' 
-                    : 'bg-red-100 text-red-800 border border-red-200'
+                  ? 'bg-neutral-100 text-neutral-800 border border-neutral-200' 
+                  : 'bg-neutral-100 text-neutral-800 border border-neutral-200'
                 }`}>
                   {updateMessage}
                 </div>
@@ -781,39 +780,39 @@ export default function AdminDashboard() {
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-neutral-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Last Login</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map((userData) => (
                     <tr key={userData.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-neutral-900">
                           {userData.first_name} {userData.last_name}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
                         {userData.email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           userData.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
-                          userData.role === 'coach' ? 'bg-blue-100 text-blue-800' : 
-                          'bg-gray-100 text-gray-800'
+                          userData.role === 'coach' ? 'bg-neutral-100 text-neutral-800' : 
+                          'bg-neutral-100 text-neutral-800'
                         }`}>
                           {userData.role}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          userData.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          userData.is_active ? 'bg-neutral-100 text-neutral-800' : 'bg-neutral-100 text-neutral-800'
                         }`}>
                           {userData.is_active ? 'Active' : 'Inactive'}
                         </span>
@@ -828,7 +827,7 @@ export default function AdminDashboard() {
                             <button
                               onClick={() => handleRoleUpdate(userData.id, 'user')}
                               disabled={updateLoading === userData.id}
-                              className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="text-neutral-700 hover:text-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {updateLoading === userData.id ? 'Updating...' : 'Demote to User'}
                             </button>
@@ -837,7 +836,7 @@ export default function AdminDashboard() {
                               <button
                                 onClick={() => handleRoleUpdate(userData.id, 'admin')}
                                 disabled={updateLoading === userData.id}
-                                className="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="text-neutral-700 hover:text-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 {updateLoading === userData.id ? 'Updating...' : 'Promote to Admin'}
                               </button>
@@ -853,7 +852,7 @@ export default function AdminDashboard() {
                             <button
                               onClick={() => handleRoleUpdate(userData.id, 'admin')}
                               disabled={updateLoading === userData.id}
-                              className="text-blue-600 hover:text-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="text-neutral-700 hover:text-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {updateLoading === userData.id ? 'Updating...' : 'Promote to Admin'}
                             </button>
@@ -863,7 +862,7 @@ export default function AdminDashboard() {
                           <button
                             onClick={() => handleUserStatusToggle(userData.id, userData.is_active)}
                             disabled={updateLoading === userData.id}
-                            className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-neutral-700 hover:text-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {updateLoading === userData.id ? 'Updating...' : (
                               userData.is_active ? 'Deactivate' : 'Activate'
@@ -884,36 +883,36 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-lg shadow overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200">
-                                <h2 className="text-xl font-semibold text-gray-900">Staff Management</h2>
+                            <div className="px-6 py-4 border-b border-neutral-200">
+                                <h2 className="text-xl font-semibold text-neutral-900">Staff Management</h2>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                                    <thead className="bg-neutral-50">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hire Date</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Name</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Email</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Role</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Hire Date</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {staff.map((staffMember) => (
                                             <tr key={staffMember.id}>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-gray-900">
+                                                    <div className="text-sm font-medium text-neutral-900">
                                                         {staffMember.first_name} {staffMember.last_name}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
                                                     {staffMember.email}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-neutral-100 text-neutral-800">
                                                         {staffMember.role}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
                                                     {new Date(staffMember.hire_date).toLocaleDateString()}
                                                 </td>
                                             </tr>
@@ -925,24 +924,24 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                         <div className="bg-white rounded-lg shadow p-6">
-                            <h3 className="text-xl font-semibold text-gray-900 mb-4">Add New Coach</h3>
+                            <h3 className="text-xl font-semibold text-neutral-900 mb-4">Add New Coach</h3>
                             <form onSubmit={handleAddCoach}>
                                 <div className="space-y-4">
-                                    <input type="text" placeholder="First Name" value={newCoach.firstName} onChange={(e) => setNewCoach({ ...newCoach, firstName: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
-                                    <input type="text" placeholder="Last Name" value={newCoach.lastName} onChange={(e) => setNewCoach({ ...newCoach, lastName: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
-                                    <input type="email" placeholder="Email" value={newCoach.email} onChange={(e) => setNewCoach({ ...newCoach, email: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
-                                    <input type="password" placeholder="Password" value={newCoach.password} onChange={(e) => setNewCoach({ ...newCoach, password: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
-                                    <input type="text" placeholder="Phone" value={newCoach.phone} onChange={(e) => setNewCoach({ ...newCoach, phone: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
-                                    <input type="date" placeholder="Hire Date" value={newCoach.hireDate} onChange={(e) => setNewCoach({ ...newCoach, hireDate: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+                                    <input type="text" placeholder="First Name" value={newCoach.firstName} onChange={(e) => setNewCoach({ ...newCoach, firstName: e.target.value })} className="w-full px-4 py-2 border border-neutral-300 rounded-lg" required />
+                                    <input type="text" placeholder="Last Name" value={newCoach.lastName} onChange={(e) => setNewCoach({ ...newCoach, lastName: e.target.value })} className="w-full px-4 py-2 border border-neutral-300 rounded-lg" required />
+                                    <input type="email" placeholder="Email" value={newCoach.email} onChange={(e) => setNewCoach({ ...newCoach, email: e.target.value })} className="w-full px-4 py-2 border border-neutral-300 rounded-lg" required />
+                                    <input type="password" placeholder="Password" value={newCoach.password} onChange={(e) => setNewCoach({ ...newCoach, password: e.target.value })} className="w-full px-4 py-2 border border-neutral-300 rounded-lg" required />
+                                    <input type="text" placeholder="Phone" value={newCoach.phone} onChange={(e) => setNewCoach({ ...newCoach, phone: e.target.value })} className="w-full px-4 py-2 border border-neutral-300 rounded-lg" />
+                                    <input type="date" placeholder="Hire Date" value={newCoach.hireDate} onChange={(e) => setNewCoach({ ...newCoach, hireDate: e.target.value })} className="w-full px-4 py-2 border border-neutral-300 rounded-lg" />
                                     <div className="flex items-center space-x-2">
-                                        <label htmlFor="hourlyRate" className="text-sm font-medium text-gray-700">Hourly Rate:</label>
-                                        <input type="number" id="hourlyRate" placeholder="Hourly Rate" value={newCoach.hourlyRate} onChange={(e) => setNewCoach({ ...newCoach, hourlyRate: Number(e.target.value) })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+                                        <label htmlFor="hourlyRate" className="text-sm font-medium text-neutral-700">Hourly Rate:</label>
+                                        <input type="number" id="hourlyRate" placeholder="Hourly Rate" value={newCoach.hourlyRate} onChange={(e) => setNewCoach({ ...newCoach, hourlyRate: Number(e.target.value) })} className="w-full px-4 py-2 border border-neutral-300 rounded-lg" />
                                     </div>
-                                    <textarea placeholder="Bio" value={newCoach.bio} onChange={(e) => setNewCoach({ ...newCoach, bio: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
-                                    <button type="submit" className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700">Add Coach</button>
+                                    <textarea placeholder="Bio" value={newCoach.bio} onChange={(e) => setNewCoach({ ...newCoach, bio: e.target.value })} className="w-full px-4 py-2 border border-neutral-300 rounded-lg" />
+                                    <button type="submit" className="w-full bg-neutral-900 text-white py-2 px-4 rounded-lg hover:bg-neutral-800">Add Coach</button>
                                 </div>
                             </form>
-                            {updateMessage && <p className="mt-4 text-sm text-gray-600">{updateMessage}</p>}
+                            {updateMessage && <p className="mt-4 text-sm text-neutral-600">{updateMessage}</p>}
                         </div>
                     </div>
                 </div>
@@ -953,48 +952,48 @@ export default function AdminDashboard() {
         {activeTab === 'classes' && (
           <div className="space-y-8">
             <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">Class Management</h2>
-                <p className="text-sm text-gray-600 mt-1">View all classes and their enrolled students</p>
+            <div className="px-6 py-4 border-b border-neutral-200">
+              <h2 className="text-xl font-semibold text-neutral-900">Class Management</h2>
+              <p className="text-sm text-neutral-600 mt-1">View all classes and their enrolled students</p>
               </div>
               
               <div className="p-6">
                 {classes.length === 0 ? (
                   <div className="text-center py-8">
-                    <div className="text-gray-500 mb-4">
-                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="text-neutral-500 mb-4">
+                      <svg className="mx-auto h-12 w-12 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Classes Found</h3>
-                    <p className="text-gray-500">Add some classes to get started with class management.</p>
+                    <h3 className="text-lg font-medium text-neutral-900 mb-2">No Classes Found</h3>
+                    <p className="text-neutral-500">Add some classes to get started with class management.</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
                     {classes.map((classItem) => (
-                      <div key={classItem.id} className="border border-gray-200 rounded-lg p-6">
+                      <div key={classItem.id} className="border border-neutral-200 rounded-lg p-6">
                         <div className="flex justify-between items-start mb-4">
                           <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{classItem.name}</h3>
-                            <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                            <h3 className="text-lg font-semibold text-neutral-900">{classItem.name}</h3>
+                            <div className="flex items-center space-x-4 text-sm text-neutral-600 mt-1">
                               <span className="capitalize">{classItem.day_of_week}</span>
                               <span>{classItem.start_time} - {classItem.end_time}</span>
-                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                              <span className="px-2 py-1 bg-neutral-100 text-neutral-800 rounded-full text-xs font-medium">
                                 {classItem.program_type}
                               </span>
                               {classItem.skill_level && (
-                                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                                <span className="px-2 py-1 bg-neutral-100 text-neutral-800 rounded-full text-xs font-medium">
                                   {classItem.skill_level}
                                 </span>
                               )}
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-neutral-600">
                               <span className="font-medium">{classItem.enrollment_count}</span> / {classItem.capacity} students
                             </div>
                             {classItem.monthly_price && (
-                              <div className="text-lg font-semibold text-gray-900">
+                              <div className="text-lg font-semibold text-neutral-900">
                                 ${classItem.monthly_price}/month
                               </div>
                             )}
@@ -1002,33 +1001,33 @@ export default function AdminDashboard() {
                         </div>
                         
                         {classItem.age_min || classItem.age_max ? (
-                          <div className="text-sm text-gray-600 mb-4">
+                          <div className="text-sm text-neutral-600 mb-4">
                             Age Range: {classItem.age_min ? `${classItem.age_min}+` : 'Any'} 
                             {classItem.age_max ? ` - ${classItem.age_max}` : ''}
                           </div>
                         ) : null}
 
                         <div className="mt-4">
-                          <h4 className="text-md font-medium text-gray-900 mb-3">
+                          <h4 className="text-md font-medium text-neutral-900 mb-3">
                             Enrolled Students ({classItem.enrollment_count})
                           </h4>
                           
                           {classItem.enrolled_students.length === 0 ? (
-                            <div className="text-center py-4 bg-gray-50 rounded-lg">
-                              <p className="text-sm text-gray-500">No students enrolled yet</p>
+                            <div className="text-center py-4 bg-neutral-50 rounded-lg">
+                              <p className="text-sm text-neutral-500">No students enrolled yet</p>
                             </div>
                           ) : (
                             <div className="overflow-x-auto">
                               <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                          <thead className="bg-neutral-50">
                                   <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                                       Student Name
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                                       Parent Email
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                                       Enrollment Date
                                     </th>
                                   </tr>
@@ -1037,17 +1036,17 @@ export default function AdminDashboard() {
                                   {classItem.enrolled_students.map((student) => (
                                     <tr key={student.id}>
                                       <td className="px-4 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">
+                                    <div className="text-sm font-medium text-neutral-900">
                                           {student.student_name}
                                         </div>
                                       </td>
                                       <td className="px-4 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-900">
+                                    <div className="text-sm text-neutral-900">
                                           {student.parent_email}
                                         </div>
                                       </td>
                                       <td className="px-4 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-900">
+                                    <div className="text-sm text-neutral-900">
                                           {new Date(student.enrollment_date).toLocaleDateString()}
                                         </div>
                                       </td>
@@ -1484,21 +1483,7 @@ export default function AdminDashboard() {
               </ul>
             </div>
 
-            {/* Contact Info */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
-              <div className="space-y-2 text-gray-300">
-                <p>📍 123 Gymnastics Way<br />Las Cruces, NM 88001</p>
-                <p>📞 (575) XXX-XXXX</p>
-                <p>✉️ info@crucesgymnastics.com</p>
-                <div className="mt-4">
-                  <h4 className="font-semibold text-white mb-2">Hours</h4>
-                  <p className="text-sm">Mon-Fri: 3:00 PM - 8:00 PM</p>
-                  <p className="text-sm">Saturday: 9:00 AM - 5:00 PM</p>
-                  <p className="text-sm">Sunday: 10:00 AM - 4:00 PM</p>
-                </div>
-              </div>
-            </div>
+
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">

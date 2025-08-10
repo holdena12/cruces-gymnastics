@@ -304,21 +304,7 @@ export default function TermsOfServicePage() {
               </ul>
             </div>
 
-            {/* Contact Info */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
-              <div className="space-y-2 text-gray-300">
-                <p>📍 TBD</p>
-                <p>📞 (575) XXX-XXXX</p>
-                <p>✉️ info@crucesgymnastics.com</p>
-                <div className="mt-4">
-                  <h4 className="font-semibold text-white mb-2">Hours</h4>
-                  <p className="text-sm">Mon-Fri: 3:00 PM - 8:00 PM</p>
-                  <p className="text-sm">Saturday: 9:00 AM - 5:00 PM</p>
-                  <p className="text-sm">Sunday: 10:00 AM - 4:00 PM</p>
-                </div>
-              </div>
-            </div>
+
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
